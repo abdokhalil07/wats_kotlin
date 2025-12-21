@@ -19,7 +19,6 @@ class TransactionRepositoryImpl(private val context: Context) : TransactionRepos
         dao.insert(transaction.toEntity())
     }
 
-
     override suspend fun getUnSyncedTransactions(): List<Transaction> {
         return dao.getUnSynced().map { it.toModel() }
     }
