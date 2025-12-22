@@ -25,14 +25,14 @@ fun LoginScreen(
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
 
-        Text("تسجيل الدخول", style = MaterialTheme.typography.headlineMedium)
+        Text("Login", style = MaterialTheme.typography.headlineMedium)
 
         Spacer(modifier = Modifier.height(32.dp))
 
         OutlinedTextField(
             value = uiState.value.username,
             onValueChange = { viewModel.onUsernameChanged(it) },
-            label = { Text("اسم المستخدم") },
+            label = { Text("username") },
             modifier = Modifier.fillMaxWidth()
         )
 
@@ -41,7 +41,7 @@ fun LoginScreen(
         OutlinedTextField(
             value = uiState.value.password,
             onValueChange = { viewModel.onPasswordChanged(it) },
-            label = { Text("كلمة المرور") },
+            label = { Text("password") },
             visualTransformation = PasswordVisualTransformation(),
             modifier = Modifier.fillMaxWidth()
         )
