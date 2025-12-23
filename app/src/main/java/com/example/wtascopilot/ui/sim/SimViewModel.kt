@@ -3,52 +3,64 @@ package com.example.wtascopilot.ui.sim
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.wtascopilot.data.local.UserStorage
+import com.example.wtascopilot.data.repository.SimRepository
 import com.example.wtascopilot.util.SimUtils
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import android.telephony.SubscriptionManager
-import androidx.core.app.ActivityCompat
-import android.content.pm.PackageManager
-import android.Manifest
 
 class SimViewModel : ViewModel() {
 
     private val _uiState = MutableStateFlow(SimUiState())
-    val uiState: StateFlow<SimUiState> = _uiState
+    val uiState: StateFlow<SimUiState> = _uiState.asStateFlow()
 
-    fun loadSims(context: Context) {
-        // التحقق من الإذن مرة أخرى داخل الدالة للأمان
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_NUMBERS) != PackageManager.PERMISSION_GRANTED &&
-            ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED
-        ) {
-            // إذا لم يكن هناك إذن، لا تفعل شيئاً (القائمة ستظل فارغة)
-            return
-        }
+    private val repository = SimRepository()
 
-        try {
-            val subscriptionManager = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager
-            val activeSims = subscriptionManager.activeSubscriptionInfoList ?: emptyList()
+    // تحميل الشرائح ودمجها مع حالة السيرفر
+    fun loadSimCards(context: Context) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true)
 
-            val sims = activeSims.map { subInfo ->
-                // محاولة جلب الرقم
-                val rawNumber = subInfo.number
-                SimItem(
-                    carrierName = subInfo.displayName?.toString() ?: subInfo.carrierName?.toString() ?: "Unknown",
-                    // نعالج مشكلة الرقم الفارغ هنا
-                    number = if (rawNumber.isNullOrEmpty()) "" else rawNumber
-                )
+            // 1. جلب الشرائح من الموبايل
+            val localSims = SimUtils.getSimCards(context)
+            val accountId = UserStorage.getAccountId(context)
+
+            // 2. تحويلها لـ SimUiModel والتحقق من السيرفر لكل شريحة
+            val simsWithStatus = localSims.map { sim ->
+                // نسأل السيرفر: هل الرقم ده متسجل؟
+                val isRegistered = repository.checkSimStatus(accountId, sim.phoneNumber)
+                SimUiModel(simInfo = sim, isRegistered = isRegistered)
             }
 
-            _uiState.value = _uiState.value.copy(sims = sims)
-
-        } catch (e: Exception) {
-            e.printStackTrace()
-            // في حال حدوث خطأ، القائمة تظل فارغة ولا ينهار التطبيق
+            _uiState.value = SimUiState(simCards = simsWithStatus, isLoading = false)
         }
     }
 
-    fun selectSim(number: String) {
-        _uiState.value = _uiState.value.copy(selectedSim = number)
+    // دالة الزر: لو مسجلة يعمل Stop، لو مش مسجلة يعمل Register
+    fun toggleSimRegistration(context: Context, simUiModel: SimUiModel) {
+        viewModelScope.launch {
+            val accountId = UserStorage.getAccountId(context)
+            val phone = simUiModel.simInfo.phoneNumber
+            val carrier = simUiModel.simInfo.carrierName
+            val slot = simUiModel.simInfo.slotIndex
+
+            // تغيير حالة التحميل لهذا العنصر فقط (اختياري لتحسين الـ UX)
+            // ...
+
+            val success = if (simUiModel.isRegistered) {
+                // لو مسجلة -> الغاء تسجيل (Stop)
+                repository.stopSim(accountId, phone)
+            } else {
+                // لو مش مسجلة -> تسجيل (Activate)
+                repository.registerSim(accountId, phone, carrier, slot)
+            }
+
+            if (success) {
+                // لو نجحنا، نعيد تحميل القائمة لتحديث الحالة
+                loadSimCards(context)
+            }
+        }
     }
 }

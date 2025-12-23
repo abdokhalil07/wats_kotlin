@@ -25,4 +25,26 @@ class MainViewModel : ViewModel() {
             }
         }
     }
+
+    fun fetchUserPosts(name: String, password: String) {
+        viewModelScope.launch {
+            try {
+                // نجهز الـ Body
+                val requestBody = UserSearchDto(name, password)
+
+                // نبعت الـ requestBody
+                val response = RetrofitClient1.api.getPostsByUserId(requestBody)
+
+                if (response.isSuccessful) {
+                    val posts = response.body()
+                    // تأكد إن الباك إند بيرجع List فعلاً مش Object واحد
+                    println("Found posts: $posts")
+                } else {
+                    println("Error: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                println("Exception: ${e.message}")
+            }
+        }
+    }
 }

@@ -8,6 +8,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalContext
 
 
 @Composable
@@ -16,7 +17,7 @@ fun LoginScreen(
     onLoginSuccess: () -> Unit
 ) {
     val uiState = viewModel.uiState.collectAsState()
-
+    val context = LocalContext.current
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -49,7 +50,12 @@ fun LoginScreen(
         Spacer(modifier = Modifier.height(24.dp))
 
         Button(
-            onClick = { viewModel.login(onLoginSuccess) },
+            onClick = {
+
+                viewModel.login(context) {
+                    onLoginSuccess()
+                }
+            },
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("تسجيل الدخول")

@@ -1,11 +1,19 @@
 package com.example.wtascopilot.ui.sim
 
+import com.example.wtascopilot.util.SimUtils
+
 data class SimUiState(
-    val sims: List<SimItem> = emptyList(),
-    val selectedSim: String? = null
+    val simCards: List<SimUiModel> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null
 )
 
 data class SimItem(
     val carrierName: String,
     val number: String
 )
+data class SimUiModel(
+    val simInfo: SimUtils.SimInfo,
+    val isRegistered: Boolean = false, // هل هي مسجلة في الـ API؟
+    val isLoading: Boolean = false // عشان لو بنحمل نظهر Loading spinner
+                )

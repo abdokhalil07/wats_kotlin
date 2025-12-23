@@ -1,5 +1,6 @@
 package com.example.wtascopilot.ui.login
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.wtascopilot.data.repository.LoginRepository
@@ -22,11 +23,12 @@ class LoginViewModel(
         _uiState.value = _uiState.value.copy(password = value)
     }
 
-    fun login(onSuccess: () -> Unit) {
+    fun login(context: Context, onSuccess: () -> Unit) {
         viewModelScope.launch {
             val state = _uiState.value
 
-            val result = repo.login(state.username, state.password)
+            // تمرير context للـ repo
+            val result = repo.login(context, state.username, state.password)
 
             if (result) {
                 onSuccess()

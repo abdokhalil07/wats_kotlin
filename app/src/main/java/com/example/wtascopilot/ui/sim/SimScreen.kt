@@ -1,98 +1,95 @@
 package com.example.wtascopilot.ui.sim
 
-import android.content.Context
+import android.Manifest
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.example.wtascopilot.data.local.SimStorage
-import android.Manifest
-import android.content.pm.PackageManager
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.content.ContextCompat
-
-
+import androidx.lifecycle.viewmodel.compose.viewModel // تأكد من وجود هذا الـ import
 
 @Composable
-fun SimScreen(
-    viewModel: SimViewModel,
-    onSimSelected: () -> Unit
-) {
+fun SimScreen(viewModel: SimViewModel = viewModel()) {
     val context = LocalContext.current
-    val state = viewModel.uiState.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
 
-    // 1. إعداد مطلق الإذن (Permission Launcher)
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestMultiplePermissions(),
-        onResult = { permissions ->
-            val isGranted = permissions.values.all { it }
-            if (isGranted) {
-                // ✅ هام: تحميل البيانات فوراً بعد الموافقة
-                viewModel.loadSims(context)
-            } else {
-                // يمكن هنا عرض رسالة توضح أن الإذن ضروري
-            }
-        }
-    )
-
+    // تحميل البيانات عند فتح الشاشة
     LaunchedEffect(Unit) {
-        // 2. التحقق من الأذونات عند فتح الشاشة
-        val hasPermission = androidx.core.content.ContextCompat.checkSelfPermission(
-            context, android.Manifest.permission.READ_PHONE_NUMBERS
-        ) == android.content.pm.PackageManager.PERMISSION_GRANTED &&
-                androidx.core.content.ContextCompat.checkSelfPermission(
-                    context, android.Manifest.permission.READ_PHONE_STATE
-                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
-
-        if (hasPermission) {
-            viewModel.loadSims(context)
-        } else {
-            // طلب الإذن إذا لم يكن موجوداً
-            permissionLauncher.launch(
-                arrayOf(
-                    android.Manifest.permission.READ_PHONE_NUMBERS,
-                    android.Manifest.permission.READ_PHONE_STATE
-                )
-            )
-        }
+        viewModel.loadSimCards(context)
     }
 
-    Column(modifier = Modifier.padding(16.dp)) {
-        Text("اختار الخط اللي هيتربط بالحساب", style = MaterialTheme.typography.headlineSmall)
-        Spacer(modifier = Modifier.height(16.dp))
+    Scaffold { padding ->
+        Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+            Text(
+                text = "إدارة الشرائح",
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.padding(16.dp)
+            )
 
-        // عرض رسالة إذا كانت القائمة فارغة بعد التحميل
-        if (state.value.sims.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                Text("لا توجد شرائح متاحة أو لم يتم منح الإذن", style = MaterialTheme.typography.bodyLarge)
+            if (uiState.isLoading) {
+                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
             }
-        } else {
-            LazyColumn {
-                items(state.value.sims) { sim ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("الشبكة: ${sim.carrierName}")
-                            // عرض رسالة بديلة إذا الرقم غير موجود
-                            Text("الرقم: ${if (sim.number.isNotEmpty()) sim.number else "غير معروف"}")
 
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Button(onClick = {
-                                viewModel.selectSim(sim.number)
-                                SimStorage.saveSim(context, sim.number)
-                                onSimSelected()
-                            }) {
-                                Text("ربط هذا الخط")
-                            }
+            LazyColumn(
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(uiState.simCards) { simUiModel ->
+                    SimCardItem(
+                        simModel = simUiModel,
+                        onButtonClick = {
+                            viewModel.toggleSimRegistration(context, simUiModel)
                         }
-                    }
+                    )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun SimCardItem(simModel: SimUiModel, onButtonClick: () -> Unit) {
+    Card(
+        elevation = CardDefaults.cardElevation(4.dp),
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp).fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = simModel.simInfo.carrierName,
+                    style = MaterialTheme.typography.titleMedium
+                )
+                Text(
+                    text = simModel.simInfo.phoneNumber,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                // المطلب رقم 1: كتابة الحالة
+                Text(
+                    text = if (simModel.isRegistered) "✅ مسجلة في النظام" else "❌ غير مسجلة",
+                    color = if (simModel.isRegistered) Color(0xFF4CAF50) else Color.Gray,
+                    style = MaterialTheme.typography.bodySmall
+                )
+            }
+
+            // المطلب 2 و 3: الزر المتغير
+            Button(
+                onClick = onButtonClick,
+                colors = ButtonDefaults.buttonColors(
+                    // لو مسجلة (عايزين نعمل Stop) يبقي أحمر، لو مش مسجلة (تسجيل) يبقي أزرق
+                    containerColor = if (simModel.isRegistered) Color.Red else MaterialTheme.colorScheme.primary
+                )
+            ) {
+                Text(text = if (simModel.isRegistered) "Stop" else "تفعيل")
             }
         }
     }

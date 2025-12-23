@@ -60,7 +60,8 @@ dependencies {
     // ------------------------------------
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
-    implementation(libs.androidx.work.runtime.ktx) // لدعم Coroutines و Kotlin
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.navigation.compose) // لدعم Coroutines و Kotlin
 
     // المعالج (Processor) للمُصنِّف Room
     ksp(libs.androidx.room.compiler)

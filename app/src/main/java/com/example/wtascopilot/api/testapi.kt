@@ -3,7 +3,7 @@ package com.example.wtascopilot.api
 import kotlinx.coroutines.runBlocking
 
 fun main(args: Array<String>) = runBlocking {
-    fetchUserPosts("abdo")
+    fetchUserPosts("abdo", "65150513")
 }
 
 suspend fun createNewPost() {
@@ -17,7 +17,7 @@ suspend fun createNewPost() {
     try {
         val response = RetrofitClient1.api.createPost(newPost)
         if (response.isSuccessful) {
-            println("Created: ${response.body()}")
+            println("Created: ${response.body()?.account_id}")
         } else {
             println("Error Code: ${response.code()}")
         }
@@ -45,10 +45,10 @@ suspend fun fetchAllPosts() {
 }
 
 
-suspend fun fetchUserPosts(name: String) {
+suspend fun fetchUserPosts(name: String, password: String) {
     try {
         // نجهز الـ Body
-        val requestBody = UserSearchDto(user_name = name)
+        val requestBody = UserSearchDto(name, password)
 
         // نبعت الـ requestBody
         val response = RetrofitClient1.api.getPostsByUserId(requestBody)
@@ -56,7 +56,7 @@ suspend fun fetchUserPosts(name: String) {
         if (response.isSuccessful) {
             val posts = response.body()
             // تأكد إن الباك إند بيرجع List فعلاً مش Object واحد
-            println("Found posts: $posts")
+            println("Found posts: ${response.body()?.account_id}")
         } else {
             println("Error: ${response.code()}")
         }
