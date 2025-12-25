@@ -1,5 +1,6 @@
 package com.example.wtascopilot.ui.sim
 
+
 import android.Manifest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*

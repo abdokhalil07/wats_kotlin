@@ -1,13 +1,12 @@
 package com.example.wtascopilot.util
 
+
 import android.annotation.SuppressLint
 import android.content.Context
 import android.telephony.SubscriptionInfo
 import android.telephony.SubscriptionManager
 
 object SimUtils {
-
-    // 1. Data Class لتخزين بيانات الشريحة بشكل منظم
     data class SimInfo(
         val phoneNumber: String,
         val carrierName: String,

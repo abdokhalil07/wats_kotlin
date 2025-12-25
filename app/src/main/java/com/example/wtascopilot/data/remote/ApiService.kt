@@ -6,6 +6,7 @@ import com.example.wtascopilot.api.UserSearchDto
 import com.example.wtascopilot.data.remote.model.ApiResponse
 import com.example.wtascopilot.data.remote.model.LoginRequest
 import com.example.wtascopilot.data.remote.model.LoginResponse
+import com.example.wtascopilot.data.remote.model.SimAddRequest
 import com.example.wtascopilot.data.remote.model.SimRequest
 import com.example.wtascopilot.data.remote.model.SimStatusResponse
 import com.example.wtascopilot.data.remote.model.TransactionRequest
@@ -27,12 +28,14 @@ interface ApiService {
         @Body request: LoginRequest // ده هيتحول في الرابط لـ posts?userId=id
     ): Response<LoginResponse>
 
-    @POST("sims/check_status")
+    @Headers("Content-Type: application/json")
+    @POST("accountinfo/simstate")
     suspend fun checkSimStatus(@Body request: SimRequest): Response<SimStatusResponse>
 
     // 2. تسجيل شريحة جديدة
-    @POST("sims/add")
-    suspend fun addSim(@Body request: SimRequest): Response<SimStatusResponse>
+    @Headers("Content-Type: application/json")
+    @POST("accountinfo/add")
+    suspend fun addSim(@Body request: SimAddRequest): Response<SimStatusResponse>
 
     // 3. إيقاف (حذف) شريحة
     @POST("sims/remove")

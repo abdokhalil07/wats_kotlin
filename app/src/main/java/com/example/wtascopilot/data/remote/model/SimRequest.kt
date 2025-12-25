@@ -4,24 +4,48 @@ import com.google.gson.annotations.SerializedName
 
 // 1. موديل لفحص حالة الشريحة أو تسجيلها
 data class SimRequest(
+    @SerializedName("phone_number")
+    val phoneNumber: String,
+)
+
+
+data class SimStatusResponse(
+    @SerializedName("account_id")
+    val accountId: Boolean,
+
+    @SerializedName("is_registered")
+    val isRegistered: String?,
+
+    @SerializedName("state")
+    val state: String?
+)
+
+data class SimAddRequest(
     @SerializedName("account_id")
     val accountId: Int,
 
     @SerializedName("phone_number")
     val phoneNumber: String,
 
-    @SerializedName("carrier_name") // اسم الشبكة (Vodafone, etc)
-    val carrierName: String? = null,
+    @SerializedName("phone_name")
+    val phoneName: String?,
 
-    @SerializedName("slot_index") // رقم المكان (0 او 1)
-    val slotIndex: Int? = 0
+    @SerializedName("carrierName")
+    val carrierName: String,
+
+    @SerializedName("slotIndex")
+    val slotIndex: Int?,
+
+    @SerializedName("phone_state")
+    val phoneState: String?
 )
 
-// 2. موديل الرد (هل هي مسجلة؟)
-data class SimStatusResponse(
+data class SimAddResponse(
+    @SerializedName("account_id")
+    val accountId: Boolean,
+
     @SerializedName("is_registered")
-    val isRegistered: Boolean,
+    val isRegistered: String?,
 
-    @SerializedName("message")
-    val message: String?
-)
+    @SerializedName("state")
+    val state: String?

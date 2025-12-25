@@ -1,5 +1,6 @@
 package com.example.wtascopilot.ui.sim
 
+
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -30,7 +31,7 @@ class SimViewModel : ViewModel() {
             // 2. تحويلها لـ SimUiModel والتحقق من السيرفر لكل شريحة
             val simsWithStatus = localSims.map { sim ->
                 // نسأل السيرفر: هل الرقم ده متسجل؟
-                val isRegistered = repository.checkSimStatus(accountId, sim.phoneNumber)
+                val isRegistered = repository.checkSimStatus(sim.phoneNumber)
                 SimUiModel(simInfo = sim, isRegistered = isRegistered)
             }
 
