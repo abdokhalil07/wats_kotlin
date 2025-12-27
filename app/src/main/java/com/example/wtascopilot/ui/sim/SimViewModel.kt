@@ -48,8 +48,7 @@ class SimViewModel : ViewModel() {
             val carrier = simUiModel.simInfo.carrierName
             val slot = simUiModel.simInfo.slotIndex
 
-            // تغيير حالة التحميل لهذا العنصر فقط (اختياري لتحسين الـ UX)
-            // ...
+
 
             val success = if (simUiModel.isRegistered) {
                 // لو مسجلة -> الغاء تسجيل (Stop)

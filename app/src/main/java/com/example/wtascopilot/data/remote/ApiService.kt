@@ -1,8 +1,7 @@
 package com.example.wtascopilot.data.remote
 
 
-import com.example.wtascopilot.api.PostModel
-import com.example.wtascopilot.api.UserSearchDto
+
 import com.example.wtascopilot.data.remote.model.ApiResponse
 import com.example.wtascopilot.data.remote.model.LoginRequest
 import com.example.wtascopilot.data.remote.model.LoginResponse

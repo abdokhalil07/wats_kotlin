@@ -21,7 +21,10 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
-fun SimScreen(viewModel: SimViewModel = viewModel()) {
+fun SimScreen(
+    viewModel: SimViewModel = viewModel(),
+    onSimSelected: () -> Unit = {}
+) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
 
@@ -84,7 +87,13 @@ fun SimScreen(viewModel: SimViewModel = viewModel()) {
                     SimCardItem(
                         simModel = simUiModel,
                         onButtonClick = {
+                            // 2. عند الضغط على الزر، ننفذ المنطق الموجود
                             viewModel.toggleSimRegistration(context, simUiModel)
+
+                            // 3. (اختياري) إذا كنت تريد الانتقال للشاشة التالية فور الضغط على تفعيل:
+                            if (!simUiModel.isRegistered) { // يعني هو ضغط عشان يسجل
+                                onSimSelected()
+                            }
                         }
                     )
                 }

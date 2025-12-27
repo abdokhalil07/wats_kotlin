@@ -11,10 +11,10 @@ data class SimRequest(
 
 data class SimStatusResponse(
     @SerializedName("account_id")
-    val accountId: Boolean,
+    val accountId: Int,
 
     @SerializedName("is_registered")
-    val isRegistered: String?,
+    val isRegistered: Boolean,
 
     @SerializedName("state")
     val state: String?
