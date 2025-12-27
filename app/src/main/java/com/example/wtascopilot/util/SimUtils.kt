@@ -9,6 +9,7 @@ import android.telephony.SubscriptionManager
 object SimUtils {
     data class SimInfo(
         val phoneNumber: String,
+        val phoneName: String?,
         val carrierName: String,
         val slotIndex: Int,
         val subscriptionId: Int
@@ -18,7 +19,7 @@ object SimUtils {
     @SuppressLint("MissingPermission") // يجب التأكد من طلب الأذونات في الـ Activity
     fun getSimCards(context: Context): List<SimInfo> {
         val manager = context.getSystemService(Context.TELEPHONY_SUBSCRIPTION_SERVICE) as SubscriptionManager
-
+        val deviceName = DeviceUtils.getDeviceName()
         // الحصول على قائمة الشرائح النشطة
         val activeSims: List<SubscriptionInfo>? = manager.activeSubscriptionInfoList
 
@@ -30,7 +31,8 @@ object SimUtils {
         return activeSims.map { info ->
             SimInfo(
                 // محاولة جلب الرقم، إذا كان null نضع نص توضيحي
-                phoneNumber = if (!info.number.isNullOrEmpty()) info.number else "غير معروف",
+                phoneNumber = if (!info.number.isNullOrEmpty()) info.number else "Unknown",
+                phoneName = deviceName,
                 carrierName = info.carrierName?.toString() ?: "Unknown",
                 slotIndex = info.simSlotIndex,
                 subscriptionId = info.subscriptionId

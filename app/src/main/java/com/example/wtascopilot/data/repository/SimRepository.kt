@@ -1,6 +1,7 @@
 package com.example.wtascopilot.data.repository
 
 import com.example.wtascopilot.data.remote.RetrofitClient
+import com.example.wtascopilot.data.remote.model.SimAddRequest
 import com.example.wtascopilot.data.remote.model.SimRequest
 
 class SimRepository {
@@ -17,9 +18,9 @@ class SimRepository {
         } as Boolean
     }
 
-    suspend fun registerSim(accountId: Int, phoneNumber: String, carrier: String, slot: Int): Boolean {
+    suspend fun registerSim(accountId: Int, phoneNumber: String, phoneName: String?, carrier: String, slot: Int): Boolean {
         return try {
-            val request = SimRequest(phoneNumber)
+            val request = SimAddRequest(accountId, phoneNumber, phoneName, carrier, slot)
             val response = RetrofitClient.api.addSim(request)
             response.isSuccessful
         } catch (e: Exception) {

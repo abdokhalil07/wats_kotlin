@@ -2,7 +2,11 @@ package com.example.wtascopilot.ui.sim
 
 
 import android.Manifest
-import androidx.compose.foundation.background
+import android.content.pm.PackageManager
+import android.os.Build
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,16 +17,51 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel // تأكد من وجود هذا الـ import
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun SimScreen(viewModel: SimViewModel = viewModel()) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
 
-    // تحميل البيانات عند فتح الشاشة
+    // 1. تعريف الأذونات المطلوبة
+    val permissionsToRequest = remember {
+        mutableListOf(
+            Manifest.permission.READ_PHONE_STATE
+        ).apply {
+            // إضافة إذن قراءة الأرقام للأندرويد الحديث
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                add(Manifest.permission.READ_PHONE_NUMBERS)
+            }
+        }.toTypedArray()
+    }
+
+    // 2. مجهز (Launcher) لطلب الأذونات والتعامل مع النتيجة
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestMultiplePermissions()
+    ) { permissions ->
+        val allGranted = permissions.values.all { it }
+        if (allGranted) {
+            // لو وافق، حمل البيانات
+            viewModel.loadSimCards(context)
+        } else {
+            // لو رفض، أظهر رسالة
+            Toast.makeText(context, "يجب الموافقة على الأذونات لعرض الشرائح", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    // 3. التحقق والطلب عند فتح الشاشة
     LaunchedEffect(Unit) {
-        viewModel.loadSimCards(context)
+        val allGranted = permissionsToRequest.all {
+            ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED
+        }
+
+        if (allGranted) {
+            viewModel.loadSimCards(context)
+        } else {
+            permissionLauncher.launch(permissionsToRequest)
+        }
     }
 
     Scaffold { padding ->
@@ -74,19 +113,19 @@ fun SimCardItem(simModel: SimUiModel, onButtonClick: () -> Unit) {
                     text = simModel.simInfo.phoneNumber,
                     style = MaterialTheme.typography.bodyMedium
                 )
-                // المطلب رقم 1: كتابة الحالة
+
+                // حالة التسجيل
                 Text(
-                    text = if (simModel.isRegistered) "✅ مسجلة في النظام" else "❌ غير مسجلة",
+                    text = if (simModel.isRegistered) "مسجلة" else "غير مسجلة",
                     color = if (simModel.isRegistered) Color(0xFF4CAF50) else Color.Gray,
                     style = MaterialTheme.typography.bodySmall
                 )
             }
 
-            // المطلب 2 و 3: الزر المتغير
+            // زر التفعيل / الإيقاف
             Button(
                 onClick = onButtonClick,
                 colors = ButtonDefaults.buttonColors(
-                    // لو مسجلة (عايزين نعمل Stop) يبقي أحمر، لو مش مسجلة (تسجيل) يبقي أزرق
                     containerColor = if (simModel.isRegistered) Color.Red else MaterialTheme.colorScheme.primary
                 )
             ) {

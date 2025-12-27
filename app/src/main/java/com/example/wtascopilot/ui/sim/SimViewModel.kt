@@ -43,7 +43,8 @@ class SimViewModel : ViewModel() {
     fun toggleSimRegistration(context: Context, simUiModel: SimUiModel) {
         viewModelScope.launch {
             val accountId = UserStorage.getAccountId(context)
-            val phone = simUiModel.simInfo.phoneNumber
+            val phoneNumber = simUiModel.simInfo.phoneNumber
+            val phoneName = simUiModel.simInfo.phoneName
             val carrier = simUiModel.simInfo.carrierName
             val slot = simUiModel.simInfo.slotIndex
 
@@ -52,10 +53,10 @@ class SimViewModel : ViewModel() {
 
             val success = if (simUiModel.isRegistered) {
                 // لو مسجلة -> الغاء تسجيل (Stop)
-                repository.stopSim(accountId, phone)
+                repository.stopSim(phoneNumber)
             } else {
                 // لو مش مسجلة -> تسجيل (Activate)
-                repository.registerSim(accountId, phone, carrier, slot)
+                repository.registerSim(accountId, phoneNumber, phoneName, carrier, slot)
             }
 
             if (success) {

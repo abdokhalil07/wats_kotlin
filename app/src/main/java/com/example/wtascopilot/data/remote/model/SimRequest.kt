@@ -35,9 +35,6 @@ data class SimAddRequest(
 
     @SerializedName("slotIndex")
     val slotIndex: Int?,
-
-    @SerializedName("phone_state")
-    val phoneState: String?
 )
 
 data class SimAddResponse(
@@ -49,3 +46,4 @@ data class SimAddResponse(
 
     @SerializedName("state")
     val state: String?
+)
