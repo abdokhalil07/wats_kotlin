@@ -7,6 +7,7 @@ import com.example.wtascopilot.data.remote.model.LoginRequest
 import com.example.wtascopilot.data.remote.model.LoginResponse
 import com.example.wtascopilot.data.remote.model.SimAddRequest
 import com.example.wtascopilot.data.remote.model.SimAddResponse
+import com.example.wtascopilot.data.remote.model.SimRemoveResponse
 import com.example.wtascopilot.data.remote.model.SimRequest
 import com.example.wtascopilot.data.remote.model.SimStatusResponse
 import com.example.wtascopilot.data.remote.model.TransactionRequest
@@ -38,6 +39,7 @@ interface ApiService {
     suspend fun addSim(@Body request: SimAddRequest): Response<SimAddResponse>
 
     // 3. إيقاف (حذف) شريحة
-    @POST("sims/remove")
-    suspend fun removeSim(@Body request: SimRequest): Response<SimStatusResponse>
+    @Headers("Content-Type: application/json")
+    @POST("accountinfo/remove")
+    suspend fun removeSim(@Body request: SimRequest): Response<SimRemoveResponse>
 }
