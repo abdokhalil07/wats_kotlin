@@ -20,6 +20,11 @@ data class SimStatusResponse(
     val state: String?
 )
 
+data class SimReomveResponse(
+    @SerializedName("account_id")
+    val accountId: Int
+)
+
 data class SimAddRequest(
     @SerializedName("account_id")
     val accountId: Int,
