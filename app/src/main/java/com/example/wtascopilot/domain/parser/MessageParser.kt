@@ -2,132 +2,185 @@ package com.example.wtascopilot.domain.parser
 
 
 import com.example.wtascopilot.data.modle.Transaction
-import java.util.regex.Pattern
+
+
+enum class WalletType {
+    VODAFONE_CASH,
+    ETISALAT_CASH,
+    ORANGE_MONEY,
+    WEPAY,
+    MEEZA,
+    INSTAPAY,
+    UNKNOWN
+}
 
 class MessageParser {
 
     fun parseMessage(message: String): Transaction? {
-        val type = detectType(message)
-        if (type == "Unknown") return null
+        val type = detectType(message) ?: return null
+        val wallet = detectWallet(message)
 
-        return try {
-            Transaction(
-                transactionType = type,
-                amount = extractAmount(message),
-                fees = extractFees(message),
-                senderNumber = extractSenderNumber(message),
-                senderName = extractSenderName(message),
-                transactionId = extractTransactionId(message),
-                dateTime = extractDateTime(message),
-                balance = extractBalance(message),
-                simNumber = null // سيتم تعيينه لاحقاً عند الإرسال
+        return Transaction(
+            transactionType = type,
+            amount = extractAmount(message, type),
+            fees = extractFees(message),
+            senderNumber = extractSenderNumber(message),
+            senderName = extractSenderName(message),
+            transactionId = extractTransactionId(message),
+            dateTime = extractDateTime(message),
+            balance = extractBalance(message),
+            simNumber = null
+        )
+    }
+
+    /* ================= Wallet ================= */
+
+    private fun detectWallet(msg: String): WalletType = when {
+        Regex("vodafone|فودافون", RegexOption.IGNORE_CASE).containsMatchIn(msg) ->
+            WalletType.VODAFONE_CASH
+
+        Regex("etisalat|اتصالات", RegexOption.IGNORE_CASE).containsMatchIn(msg) ->
+            WalletType.ETISALAT_CASH
+
+        Regex("orange|أورنج", RegexOption.IGNORE_CASE).containsMatchIn(msg) ->
+            WalletType.ORANGE_MONEY
+
+        Regex("wepay|we pay|وي باي", RegexOption.IGNORE_CASE).containsMatchIn(msg) ->
+            WalletType.WEPAY
+
+        Regex("meeza|ميزة", RegexOption.IGNORE_CASE).containsMatchIn(msg) ->
+            WalletType.MEEZA
+
+        Regex("instapay", RegexOption.IGNORE_CASE).containsMatchIn(msg) ->
+            WalletType.INSTAPAY
+
+        else -> WalletType.UNKNOWN
+    }
+
+    /* ================= Type ================= */
+
+    private fun detectType(msg: String): String? = when {
+        Regex("""تم\s+استلام|Received""", RegexOption.IGNORE_CASE).containsMatchIn(msg) ->
+            "Receive"
+
+        Regex("""تم\s+تحويل|Transferred|has been transferred|sent""",
+            RegexOption.IGNORE_CASE).containsMatchIn(msg) ->
+            "Transfer"
+
+        Regex("""تم\s+دفع|Payment|paid|purchase|شراء""",
+            RegexOption.IGNORE_CASE).containsMatchIn(msg) ->
+            "Payment"
+
+        Regex("""تم\s+سحب|Withdrawal|withdrawn""",
+            RegexOption.IGNORE_CASE).containsMatchIn(msg) ->
+            "Withdrawal"
+
+        else -> null
+    }
+
+    /* ================= Amount ================= */
+
+
+    private fun extractAmount(msg: String, type: String): Double {
+        return matchFirst(
+            msg,
+            listOf(
+                """تم\s+استلام\s+(?:مبلغ\s+)?(\d+(?:\.\d+)?)""",
+                """تم\s+(?:تحويل|سحب|دفع)\s+(\d+(?:\.\d+)?)""",
+                """Received\s+EGP\s*(\d+(?:\.\d+)?)""",
+                """Amount\s*:\s*(\d+(?:\.\d+)?)""",
+                """(?:مبلغ|قيمة)\s+(\d+(?:\.\d+)?)""",
+                """EGP\s*(\d+(?:\.\d+)?)""",
+
+
+
             )
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
+        )?.toDouble() ?: 0.0
     }
 
-    private fun detectType(message: String): String = when {
-        // أنماط اللغة العربية
-        message.contains("تم دفع") || message.contains("خدمة لفودافون") -> "Payment"
-        message.contains("تم سحب") -> "Withdrawal"
-        message.contains("تم تحويل") || message.contains("تحويل مبلغ") -> "Transfer"
-        message.contains("تم استلام") -> "Receive"
-        // أنماط اللغة الإنجليزية
-        message.contains("Received", ignoreCase = true) -> "Receive"
-        message.contains("Transfer", ignoreCase = true) -> "Transfer"
-        message.contains("Payment", ignoreCase = true) -> "Payment"
-        else -> "Unknown"
-    }
+    /* ================= Fees ================= */
 
-    private fun extractAmount(message: String): Double {
-        // قائمة الأنماط المحتملة للمبلغ مرتبة حسب الأولوية
-        val patterns = listOf(
-            // حالة: تم تحويل 240.0 (بدون كلمة مبلغ)
-            """تم\s+(?:تحويل|سحب|دفع)\s+(\d+(?:\.\d+)?)""",
-            // حالة: تم استلام مبلغ 400.00
-            """(?:مبلغ|قيمة)\s+(\d+(?:\.\d+)?)""",
-            // حالة الإنجليزي: Received EGP10
-            """EGP\s*(\d+(?:\.\d+)?)""",
-            """Amount\s*:\s*(\d+(?:\.\d+)?)"""
-        )
-        return matchFirst(message, patterns)?.toDouble() ?: 0.0
-    }
+    private fun extractFees(msg: String): Double? =
+        matchFirst(
+            msg,
+            listOf(
+                """مصاريف\s+(?:الخدمة)?\s*(\d+(?:\.\d+)?)""",
+                """رسوم\s*(\d+(?:\.\d+)?)""",
+                """Fees:\s*EGP\s*(\d+(?:\.\d+)?)"""
+            )
+        )?.toDouble()
 
-    private fun extractFees(message: String): Double? {
-        val patterns = listOf(
-            """مصاريف الخدمة\s+(\d+(?:\.\d+)?)""", //
-            """رسوم\s+(?:خدمة|الخدمة)?\s*(\d+(?:\.\d+)?)""" // [cite: 22]
-        )
-        return matchFirst(message, patterns)?.toDouble()
-    }
+    /* ================= Phone ================= */
 
-    private fun extractSenderNumber(message: String): String? {
-        val patterns = listOf(
-            // حالة العربي: من رقم ... أو لرقم ... [cite: 18, 27]
-            """(?:من|ل)??رقم\s+(\d{11})""",
-            // حالة الإنجليزي: from 002...
-            """from\s+(\d+)"""
-        )
-        return matchFirst(message, patterns)
-    }
-
-    private fun extractSenderName(message: String): String? {
-        // الاسم غالباً يأتي بعد "المسجل بإسم" وينتهي عند نقطة أو بداية جملة الرصيد
-        // [cite: 18, 31]
-        val regex = Regex("""المسجل بإسم\s+([A-Za-z\u0600-\u06FF\s]+?)(?:[\.;]|\s+رصيد)""")
-        return regex.find(message)?.groups?.get(1)?.value?.trim()
-    }
-
-    private fun extractTransactionId(message: String): String {
-        val patterns = listOf(
-            // حالة الإنجليزي: Ref: ...
-            """Ref:\s*(\d+)""",
-            // حالة العربي: رقم العملية ... (قد يسبقها فاصلة منقوطة أو مسافة) [cite: 19, 25]
-            """رقم العملية[^\d]*(\d+)"""
-        )
-        return matchFirst(message, patterns) ?: "Unknown"
-    }
-
-    private fun extractDateTime(message: String): String {
-        val patterns = listOf(
-            // حالة الإنجليزي في البداية: Dec 29, 2025...
-            """^([A-Za-z]{3}\s+\d{1,2},\s+\d{4}\s+\d{1,2}:\d{2}:\d{2}\s+[AP]M)""",
-            // حالة العربي: تاريخ العملية 24-09-25... [cite: 19]
-            """تاريخ العملية\s+([0-9\-/]+\s+[0-9:]+)"""
+    private fun extractSenderNumber(msg: String): String? =
+        matchFirst(
+            msg,
+            listOf(
+                "من\\s+([A-Za-z\\u0600-\\u06FF\\s]+)",
+                """(?:من|إلى|ل|from|to)\s+(?:رقم\s+)?(01\d{9})"""
+            )
         )
 
-        // البحث باستخدام Regex العادي لأن ^ (بداية السطر) تتطلب تعاملاً خاصاً
-        for (pattern in patterns) {
-            val regex = Regex(pattern, RegexOption.MULTILINE)
-            val match = regex.find(message)
-            if (match != null) {
-                return match.groups[1]?.value?.trim() ?: continue
-            }
-        }
-        return "Unknown"
+    /* ================= Name ================= */
+
+    private fun extractSenderName(msg: String): String? {
+        return matchFirst(
+            msg,
+            listOf(
+                // عربي: الاسم يأتي بعد "بإسم" ويتوقف عند الفاصلة أو النقطة أو كلمة رصيد
+                """المسجل بإسم\s+([A-Za-z\u0600-\u06FF\s]+?)(?:[\.;]|\s+رصيد)""",
+
+                // إنجليزي Instapay
+                """from\s+([A-Za-z\s]+)""",
+
+                // حالات التحويل لـ
+                """to\s+([A-Za-z\u0600-\u06FF\s]+?)(?:[\.;]|\s+Amount)"""
+            )
+        )?.trim()
     }
 
-    private fun extractBalance(message: String): Double {
-        val patterns = listOf(
-            // حالة الإنجليزي: Available Balance: 73.58
-            """Available Balance:\s*(\d+(?:\.\d+)?)""",
-            // حالة العربي: رصيد محفظتك الحالي أو رصيد حسابك [cite: 18, 22, 24]
-            """رصيد(?:ك|.*الحالي)\s+(\d+(?:\.\d+)?)"""
-        )
-        return matchFirst(message, patterns)?.toDouble() ?: 0.0
-    }
+    /* ================= Ref ================= */
 
-    // دالة مساعدة لتجربة أكثر من نمط Regex وإرجاع أول نتيجة صحيحة
+    private fun extractTransactionId(msg: String): String =
+        matchFirst(
+            msg,
+            listOf(
+                """رقم\s+العملية\s*(\d+)""",
+                """Transaction ID\s*(\d+)""",
+                """Ref:\s*(\d+)"""
+            )
+        ) ?: "Unknown"
+
+    /* ================= Date ================= */
+
+    private fun extractDateTime(msg: String): String =
+        matchFirst(
+            msg,
+            listOf(
+                """\d{2}-\d{2}-\d{4}\s+\d{2}:\d{2}""",
+                """\d{2}/\d{2}/\d{4}\s+\d{2}:\d{2}""",
+                """[A-Za-z]{3}\s+\d{1,2},\s+\d{4}.*?(AM|PM)"""
+            )
+        ) ?: "Unknown"
+
+    /* ================= Balance ================= */
+
+    private fun extractBalance(msg: String): Double =
+        matchFirst(
+            msg,
+            listOf(
+                """رصيد.*?(\d+(?:\.\d+)?)""",
+                """Balance.*?(\d+(?:\.\d+)?)""",
+                """Available Balance:\s*(\d+(?:\.\d+)?)"""
+            )
+        )?.toDouble() ?: 0.0
+
+    /* ================= Helper ================= */
+
     private fun matchFirst(text: String, patterns: List<String>): String? {
-        for (pattern in patterns) {
-            val regex = Regex(pattern, setOf(RegexOption.IGNORE_CASE, RegexOption.MULTILINE))
-            val match = regex.find(text)
-            if (match != null) {
-                // نحاول استرجاع المجموعة رقم 1 (القيمة المطلوبة)
-                return match.groups[1]?.value
-            }
+        for (p in patterns) {
+            val r = Regex(p, RegexOption.IGNORE_CASE)
+            r.find(text)?.groups?.get(1)?.value?.let { return it }
         }
         return null
     }
