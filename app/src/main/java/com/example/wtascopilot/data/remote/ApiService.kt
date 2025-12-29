@@ -18,7 +18,8 @@ import retrofit2.http.POST
 
 interface ApiService {
 
-    @POST("transactions/add")
+    @Headers("Content-Type: application/json")
+    @POST("wallet/new")
     suspend fun sendTransaction(
         @Body request: TransactionRequest
     ): Response<ApiResponse>

@@ -1,22 +1,22 @@
 package com.example.wtascopilot.data.remote.model
 import com.google.gson.annotations.SerializedName
 data class TransactionRequest(
-    @SerializedName("transactionType")
+    @SerializedName("transaction_Type")
     val transactionType: String,
     @SerializedName("amount")
     val amount: Double,
     @SerializedName("fees")
     val fees: Double?,
-    @SerializedName("senderNumber")
+    @SerializedName("sender_Number")
     val senderNumber: String?,
-    @SerializedName("senderName")
+    @SerializedName("sender_Name")
     val senderName: String?,
-    @SerializedName("transactionId")
+    @SerializedName("transaction_Id")
     val transactionId: String,
     @SerializedName("dateTime")
     val dateTime: String,
     @SerializedName("balance")
     val balance: Double,
-    @SerializedName("simNumber")
+    @SerializedName("sim_Number")
     val simNumber: String? // هنضيفها لاحقًا من SIM Screen
 )

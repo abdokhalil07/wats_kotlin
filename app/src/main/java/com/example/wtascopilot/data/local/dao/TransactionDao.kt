@@ -17,4 +17,7 @@ interface TransactionDao {
 
     @Query("UPDATE transactions SET isSynced = 1 WHERE id = :id")
     suspend fun markAsSynced(id: Int)
+
+    @Query("SELECT COUNT(*) FROM transactions WHERE transactionId = :vfId")
+    suspend fun checkIfExists(vfId: String): Int
 }

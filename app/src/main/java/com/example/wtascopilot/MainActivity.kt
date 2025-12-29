@@ -70,5 +70,24 @@ class MainActivity : ComponentActivity() {
                 }
 
         }
+        checkAndRequestPermissions()
+    }
+    private fun checkAndRequestPermissions() {
+        val permissions = arrayOf(
+            android.Manifest.permission.RECEIVE_SMS,
+            android.Manifest.permission.READ_PHONE_STATE
+        )
+
+        val permissionsToRequest = permissions.filter {
+            androidx.core.content.ContextCompat.checkSelfPermission(this, it) != android.content.pm.PackageManager.PERMISSION_GRANTED
+        }
+
+        if (permissionsToRequest.isNotEmpty()) {
+            androidx.core.app.ActivityCompat.requestPermissions(
+                this,
+                permissionsToRequest.toTypedArray(),
+                100 // Request Code
+            )
+        }
     }
 }

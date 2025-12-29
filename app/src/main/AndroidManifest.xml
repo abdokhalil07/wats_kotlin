@@ -25,9 +25,8 @@
         android:theme="@style/Theme.WTASCopilot">
 
         <receiver
-            android:name= ".sms.receiver.SmsReceiver"
-            android:exported="true"
-            android:permission="android.permission.BROADCAST_SMS">
+            android:name=".sms.receiver.SmsReceiver"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.provider.Telephony.SMS_RECEIVED" />
             </intent-filter>

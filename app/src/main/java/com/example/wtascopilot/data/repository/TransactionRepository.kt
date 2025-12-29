@@ -11,4 +11,6 @@ interface TransactionRepository {
 
     suspend fun markAsSynced(id: Int)
 
+    suspend fun isTransactionExist(transactionId: String): Boolean
+
 }
