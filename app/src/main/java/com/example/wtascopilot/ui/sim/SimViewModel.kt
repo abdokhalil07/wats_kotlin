@@ -4,6 +4,7 @@ package com.example.wtascopilot.ui.sim
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.wtascopilot.data.local.SimStorage
 import com.example.wtascopilot.data.local.UserStorage
 import com.example.wtascopilot.data.repository.SimRepository
 import com.example.wtascopilot.util.SimUtils
@@ -42,20 +43,31 @@ class SimViewModel : ViewModel() {
     // دالة الزر: لو مسجلة يعمل Stop، لو مش مسجلة يعمل Register
     fun toggleSimRegistration(context: Context, simUiModel: SimUiModel) {
         viewModelScope.launch {
-            val accountId = UserStorage.getAccountId(context)
-            val phoneNumber = simUiModel.simInfo.phoneNumber
-            val phoneName = simUiModel.simInfo.phoneName
-            val carrier = simUiModel.simInfo.carrierName
-            val slot = simUiModel.simInfo.slotIndex
 
-
+            val simInfo = simUiModel.simInfo
 
             val success = if (simUiModel.isRegistered) {
-                // لو مسجلة -> الغاء تسجيل (Stop)
-                repository.stopSim(phoneNumber)
+                val res = repository.stopSim(simInfo.phoneNumber)
+                if (res) SimStorage.clearSim(context) // مسح البيانات لو عمل Stop
+                res
             } else {
-                // لو مش مسجلة -> تسجيل (Activate)
-                repository.registerSim(accountId, phoneNumber, phoneName, carrier, slot)
+                val res = repository.registerSim(
+                    accountId = UserStorage.getAccountId(context),
+                    phoneNumber = simInfo.phoneNumber,
+                    phoneName = simInfo.phoneName,
+                    carrier = simInfo.carrierName,
+                    slot = simInfo.slotIndex
+                )
+                if (res) {
+                    // حفظ البيانات محلياً فور النجاح
+                    SimStorage.saveActiveSim(
+                        context,
+                        simInfo.phoneNumber,
+                        simInfo.slotIndex,
+                        simInfo.subscriptionId
+                    )
+                }
+                res
             }
 
             if (success) {

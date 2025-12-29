@@ -29,9 +29,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         WorkScheduler.scheduleSync(this)
-
         setContent {
-
                 val navController = rememberNavController()
                 val context = LocalContext.current
 
@@ -60,7 +58,6 @@ class MainActivity : ComponentActivity() {
                                 }
                             )
                         }
-
                         composable("home") {
                             val simViewModel: SimViewModel = viewModel()
 

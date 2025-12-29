@@ -29,7 +29,7 @@ class TransactionRepositoryImpl(private val context: Context) : TransactionRepos
 
     override suspend fun sendToServer(transaction: Transaction): Boolean {
         return try {
-            val simNumber = SimStorage.getSim(context)
+            val simNumber = SimStorage.getSavedPhoneNumber(context) ?: "Unknown"
 
             val request = transaction.toRequest(simNumber)
 

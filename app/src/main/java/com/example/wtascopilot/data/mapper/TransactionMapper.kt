@@ -24,6 +24,9 @@ fun TransactionEntity.toModel(): Transaction {
         id = this.id,
         transactionType = this.transactionType,
         amount = this.amount,
+        // بما أن الـ Entity لا تخزن رقم الشريحة، نعيده كـ null عند القراءة من الـ DB
+        // سيتم تزويده لاحقاً عند الإرسال عبر toRequest
+        simNumber = null,
         fees = this.fees,
         senderNumber = this.senderNumber,
         senderName = this.senderName,
@@ -34,6 +37,7 @@ fun TransactionEntity.toModel(): Transaction {
     )
 }
 
+// هذه الدالة ممتازة وتخدم المنطق الخاص بك لحقن رقم الشريحة قبل الإرسال
 fun Transaction.toRequest(simNumber: String?): TransactionRequest {
     return TransactionRequest(
         transactionType = transactionType,
@@ -44,7 +48,6 @@ fun Transaction.toRequest(simNumber: String?): TransactionRequest {
         transactionId = transactionId,
         dateTime = dateTime,
         balance = balance,
-        simNumber = simNumber
+        simNumber = simNumber // هنا يتم ربط رقم الشريحة
     )
 }
-

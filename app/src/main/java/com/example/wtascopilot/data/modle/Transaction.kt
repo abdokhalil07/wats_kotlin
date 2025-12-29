@@ -4,6 +4,7 @@ data class Transaction(
     val id: Int = 0,
     val transactionType: String,
     val amount: Double,
+    val simNumber: String?,
     val fees: Double?,
     val senderNumber: String?,
     val senderName: String?,
