@@ -11,5 +11,6 @@ data class Transaction(
     val transactionId: String,
     val dateTime: String,
     val balance: Double,
-    val isSynced: Boolean = false
+    val isSynced: Boolean = false,
+    val messageHash: String
 )

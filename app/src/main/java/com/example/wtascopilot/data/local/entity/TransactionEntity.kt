@@ -1,14 +1,15 @@
 package com.example.wtascopilot.data.local.entity
 
+
+
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 @Entity(tableName = "transactions")
 data class TransactionEntity(
-    @PrimaryKey(autoGenerate = true)
+    @PrimaryKey val messageHash: String, // المعرف الفريد الجديد
     val id: Int = 0,
-
-    val transactionType: String,
+    val transactionType: String?,
     val amount: Double,
     val fees: Double?,
     val senderNumber: String?,

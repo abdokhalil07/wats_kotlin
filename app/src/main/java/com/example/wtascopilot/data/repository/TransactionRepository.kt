@@ -1,6 +1,7 @@
 package com.example.wtascopilot.data.repository
 
 import com.example.wtascopilot.data.modle.Transaction
+import kotlinx.coroutines.flow.Flow
 
 interface TransactionRepository {
     suspend fun saveLocal(transaction: Transaction)
@@ -9,7 +10,9 @@ interface TransactionRepository {
 
     suspend fun getUnSyncedTransactions(): List<Transaction>
 
-    suspend fun markAsSynced(id: Int)
+    fun getAllLocalTransactions(): Flow<List<Transaction>>
+
+    suspend fun markAsSynced(hash: String)
 
     suspend fun isTransactionExist(transactionId: String): Boolean
 

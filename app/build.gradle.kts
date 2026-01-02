@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 
-    alias(libs.plugins.ksp) // لتشغيل معالجات التعليقات التوضيحية (Annotation Processors)
+    alias(libs.plugins.ksp) //
     alias(libs.plugins.hilt)
 }
 
@@ -55,13 +55,15 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation("androidx.compose.material:material-icons-extended:1.5.4")
 
     // 1. Room Components
     // ------------------------------------
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.work.runtime.ktx)
-    implementation(libs.androidx.navigation.compose) // لدعم Coroutines و Kotlin
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.ads.mobile.sdk) // لدعم Coroutines و Kotlin
 
     // المعالج (Processor) للمُصنِّف Room
     ksp(libs.androidx.room.compiler)

@@ -4,12 +4,15 @@ import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.wtascopilot.data.repository.LoginRepository
+import com.example.wtascopilot.data.repository.TransactionRepositoryImpl
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 
 class LoginViewModel(
     private val repo: LoginRepository
+
+
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())

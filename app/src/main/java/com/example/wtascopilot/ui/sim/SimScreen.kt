@@ -123,6 +123,12 @@ fun SimCardItem(simModel: SimUiModel, onButtonClick: () -> Unit) {
                     style = MaterialTheme.typography.bodyMedium
                 )
 
+                Text(
+                    text = "Subscription ID: ${simModel.simInfo.subscriptionId}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.secondary
+                )
+
                 // حالة التسجيل
                 Text(
                     text = if (simModel.isRegistered) "مسجلة" else "غير مسجلة",

@@ -5,6 +5,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.wtascopilot.data.local.entity.TransactionEntity
+import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface TransactionDao {
@@ -15,9 +16,14 @@ interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE isSynced = 0")
     suspend fun getUnSynced(): List<TransactionEntity>
 
-    @Query("UPDATE transactions SET isSynced = 1 WHERE id = :id")
-    suspend fun markAsSynced(id: Int)
+    // نستخدم الـ messageHash لتحديث حالة المزامنة لأنه الـ PrimaryKey
+    @Query("UPDATE transactions SET isSynced = 1 WHERE messageHash = :messageHash")
+    suspend fun markAsSynced(messageHash: String)
 
-    @Query("SELECT COUNT(*) FROM transactions WHERE transactionId = :vfId")
-    suspend fun checkIfExists(vfId: String): Int
+    // الحفاظ على اسم الدالة checkIfExists وتعديل منطقها ليفحص الـ hash
+    @Query("SELECT COUNT(*) FROM transactions WHERE messageHash = :hash")
+    suspend fun checkIfExists(hash: String): Int
+
+    @Query("SELECT * FROM transactions ORDER BY dateTime DESC")
+    fun getAllTransactions(): Flow<List<TransactionEntity>>
 }

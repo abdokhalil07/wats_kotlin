@@ -7,7 +7,6 @@ import android.provider.Telephony
 import android.util.Log
 import com.example.wtascopilot.data.local.SimStorage
 import com.example.wtascopilot.data.repository.TransactionRepositoryImpl
-import com.example.wtascopilot.data.work.WorkScheduler
 import com.example.wtascopilot.domain.parser.MessageParser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -26,32 +25,28 @@ class SmsReceiver : BroadcastReceiver() {
 
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    // التحقق من الشريحة
+                    // التحقق من أن الرسالة قادمة من الشريحة المسجلة محلياً
                     if (incomingSubId != -1 && incomingSubId == savedSubId) {
 
                         val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
-
-                        // --- التعديل الجذري هنا ---
-                        // 1. تجميع نص الرسالة كاملاً من كل الأجزاء
+                        val sender = messages[0].displayOriginatingAddress
                         val fullMessageBody = StringBuilder()
-                        var sender = ""
 
-                        messages?.forEach { sms ->
+                        // تجميع أجزاء الرسالة (في حال كانت الرسالة طويلة ومقسمة)
+                        for (sms in messages) {
                             fullMessageBody.append(sms.displayMessageBody)
-                            // نأخذ اسم الراسل من أول جزء فقط
-                            if (sender.isEmpty()) {
-                                sender = sms.displayOriginatingAddress ?: ""
-                            }
                         }
 
                         val finalBody = fullMessageBody.toString()
 
-                        // 2. التحقق والمعالجة مرة واحدة فقط للنص المجمع
+                        // التحقق هل المرسل من ضمن القائمة البيضاء (White List) للمحافظ
                         if (isVodafoneCashMessage(sender, finalBody)) {
-                            handleIncomingMessage(context.applicationContext, finalBody)
+                            // تم إضافة sender هنا لتمريره للمحلل
+                            handleIncomingMessage(context.applicationContext, sender, finalBody)
                         }
                     }
                 } catch (e: Exception) {
+                    Log.e("SmsReceiver", "Error receiving SMS: ${e.message}")
                     e.printStackTrace()
                 } finally {
                     pendingResult.finish()
@@ -62,26 +57,34 @@ class SmsReceiver : BroadcastReceiver() {
 
     private fun isVodafoneCashMessage(sender: String?, body: String): Boolean {
         if (sender == null) return false
-        return sender.contains("7001") ||
-                sender.contains("VF-Cash") ||
-                body.contains("فودافون كاش")
+        val s = sender.lowercase()
+        // التحقق من الأسماء الرسمية للمرسلين لضمان الدقة
+        return s.contains("vf-cash") ||
+                s.contains("e& money") ||
+                s.contains("etisalat") ||
+                s.contains("orange") ||
+                body.contains("Orange Cash", ignoreCase = true)
     }
 
-    private suspend fun handleIncomingMessage(context: Context, message: String) {
-        val transaction = parser.parseMessage(message)
+    private suspend fun handleIncomingMessage(context: Context, sender: String?, message: String) {
+        // قمنا بتمرير الـ sender هنا لتمكين الـ MessageParser من اختيار الدالة المناسبة من الـ 9 دوال
+        val transaction = parser.parseMessage(sender, message)
 
         if (transaction != null) {
             val repo = TransactionRepositoryImpl(context)
 
-            // نتأكد هل هي موجودة ولا لأ
-            val isDuplicate = repo.isTransactionExist(transaction.transactionId) // ستحتاج لإضافة هذه الدالة في الـ Repo
+            // التحقق من عدم تكرار العملية قبل الحفظ (Idempotency)
+            val isDuplicate = repo.isTransactionExist(transaction.messageHash)
 
             if (!isDuplicate) {
-                repo.saveLocal(transaction) // حفظ
-                repo.sendToServer(transaction) // إرسال
+                Log.d("SmsReceiver", "New transaction found: ${transaction.transactionId}")
+                repo.saveLocal(transaction) // حفظ في Room
+                repo.sendToServer(transaction) // محاولة الإرسال للسيرفر فوراً
             } else {
-                Log.d("SmsReceiver", "الرسالة مكررة، تم تجاهلها.")
+                Log.d("SmsReceiver", "Duplicate transaction ignored: ${transaction.transactionId}")
             }
+        } else {
+            Log.d("SmsReceiver", "Message received but could not be parsed.")
         }
     }
 }
