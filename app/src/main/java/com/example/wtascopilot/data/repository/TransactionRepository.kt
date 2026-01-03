@@ -14,6 +14,8 @@ interface TransactionRepository {
 
     suspend fun markAsSynced(hash: String)
 
+    suspend fun toggleSyncStatus(hash: String)
+
     suspend fun isTransactionExist(transactionId: String): Boolean
 
 }

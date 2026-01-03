@@ -26,4 +26,8 @@ interface TransactionDao {
 
     @Query("SELECT * FROM transactions ORDER BY dateTime DESC")
     fun getAllTransactions(): Flow<List<TransactionEntity>>
+
+    @Query("UPDATE transactions SET isSynced = CASE WHEN isSynced = 1 THEN 0 ELSE 1 END WHERE messageHash = :hash")
+    suspend fun toggleSyncStatus(hash: String)
+
 }

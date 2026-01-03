@@ -52,4 +52,11 @@ class LogViewModel(context: Context) : ViewModel() {
             loadLogs()
         }
     }
+
+    fun toggleSync(hash: String) {
+        viewModelScope.launch {
+            repository.toggleSyncStatus(hash)
+            // مش محتاج تنادي refresh لأن الـ Flow هيحس بالتغيير لوحده
+        }
+    }
 }

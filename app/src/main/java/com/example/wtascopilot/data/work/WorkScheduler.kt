@@ -2,13 +2,12 @@ package com.example.wtascopilot.data.work
 
 import android.content.Context
 import androidx.work.Constraints
+import androidx.work.ExistingWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 
-
 object WorkScheduler {
-
     fun scheduleSync(context: Context) {
         val constraints = Constraints.Builder()
             .setRequiredNetworkType(NetworkType.CONNECTED)
@@ -18,6 +17,10 @@ object WorkScheduler {
             .setConstraints(constraints)
             .build()
 
-        WorkManager.getInstance(context).enqueue(work)
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            "sync_work_unique",
+            ExistingWorkPolicy.KEEP,
+            work
+        )
     }
 }

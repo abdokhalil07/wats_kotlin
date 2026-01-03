@@ -14,15 +14,14 @@ class MessageParser {
         val s = sender?.lowercase() ?: ""
 
         // توليد البصمة الفريدة للرسالة (Hash)
-        val msgHash = generateMD5(s + message , subId)
+        val msgHash = generateMD5(s , message , subId)
 
         // التوجيه بناءً على اسم المرسل (الأولوية الأولى)
         val transaction = when {
             s.contains("vf-cash") -> vodafoneParser.parseVodafone(message)
-            s.contains("e& money") || s.contains("etisalat") -> etisalatParser.parseEtisalat(message)
-            s.contains("orange") -> orangeParser.parseOrange(message)
+            s.contains("e& money") -> etisalatParser.parseEtisalat(message)
+            s.contains("orange cash") -> orangeParser.parseOrange(message)
             else -> {
-                // محاولة التخمين من النص إذا كان المرسل غير معروف (الأولوية الثانية)
                 when (detectWallet(message)) {
                     WalletType.VODAFONE_CASH -> vodafoneParser.parseVodafone(message)
                     WalletType.ETISALAT_CASH -> etisalatParser.parseEtisalat(message)
@@ -35,17 +34,17 @@ class MessageParser {
         return transaction?.copy(messageHash = msgHash)
     }
 
-    private fun generateMD5(input: String, subId: Int): String {
-        val finalInput = input + subId.toString()
+    private fun generateMD5(sender: String?, message: String, subId: Int): String {
+        val finalInput = sender+ message + subId.toString()
         val bytes = MessageDigest.getInstance("MD5").digest(finalInput.toByteArray())
         return bytes.joinToString("") { "%02x".format(it) }
     }
 
     private fun detectWallet(message: String): WalletType {
         return when {
-            message.contains("فودافون كاش", true) || message.contains("VF-Cash", true) -> WalletType.VODAFONE_CASH
-            message.contains("اتصالات كاش", true) || message.contains("e& money", true) -> WalletType.ETISALAT_CASH
-            message.contains("أورانج كاش", true) || message.contains("Orange Cash", true) -> WalletType.ORANGE_MONEY
+            message.contains("فودافون كاش", true) || message.contains("VF-Cash", true) || message.contains("لفودافون كاش", true) -> WalletType.VODAFONE_CASH
+            message.contains("إي اندكاش", true) || message.contains("e&money", true) -> WalletType.ETISALAT_CASH
+            message.contains("اورنچ كاش", true) || message.contains("Orange Cash", true) -> WalletType.ORANGE_MONEY
             else -> WalletType.UNKNOWN
         }
     }

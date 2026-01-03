@@ -42,9 +42,11 @@ class TransactionRepositoryImpl(private val context: Context) : TransactionRepos
             val simNumber = SimStorage.getSavedPhoneNumber(context) ?: "Unknown"
             val request = transaction.toRequest(simNumber)
             val response = RetrofitClient.api.sendTransaction(request)
-            response.isSuccessful && response.body()?.success == true
+
+            // التعديل هنا: لو السيرفر رد بـ 200 أو 201، نعتبرها نجحت فوراً
+            // ده أضمن بكتير من فحص الـ body اللي ممكن يكون null أو فيه كلمة غلط
+            response.isSuccessful
         } catch (e: Exception) {
-            e.printStackTrace()
             false
         }
     }
@@ -60,4 +62,10 @@ class TransactionRepositoryImpl(private val context: Context) : TransactionRepos
             entities.map { it.toModel() }
         }
     }
+
+    override suspend fun toggleSyncStatus(hash: String) {
+        dao.toggleSyncStatus(hash)
+    }
+
+
 }

@@ -1,6 +1,9 @@
 package com.example.wtascopilot
 import com.example.wtascopilot.domain.parser.MessageParser
 import com.example.wtascopilot.data.modle.Transaction
+import com.example.wtascopilot.domain.parser.EtisalatParser
+import com.example.wtascopilot.domain.parser.OrangeParser
+import com.example.wtascopilot.domain.parser.VodafoneParser
 
 fun main(){
     val vodafoneCashRecive = """
@@ -70,6 +73,14 @@ fun main(){
     val instaList = arrayListOf<String>(
         instaPayTransfare
     )
+
+    /*val  paservodafone = VodafoneParser()
+    val  paseretisalate = EtisalatParser()
+    val  paserOrange = OrangeParser()
+
+    for (i in vodafonecashList){
+        println(paservodafone.parseVodafone(i))
+    }*/
 
 
 

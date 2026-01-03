@@ -7,10 +7,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.CloudUpload
+import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -18,84 +23,68 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.wtascopilot.data.modle.Transaction
 
 @OptIn(ExperimentalMaterial3Api::class)
+
 @Composable
 fun TransactionLogScreen(viewModel: LogViewModel = viewModel()) {
-    // جلب البيانات من الـ ViewModel
-    val transactions by viewModel.transactions.collectAsState()
+    val transactions by viewModel.transactions.collectAsState(initial = emptyList())
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text("سجل العمليات المحلية") },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+    // حالة الـ Tab المختار (0 للكل أو المزامنة، 1 لغير المزامنة)
+    var selectedTabIndex by remember { mutableStateOf(0) }
+    val tabs = listOf("Synced ✅", "UnSynced ⏳")
+
+    Column {
+        // شريط التبويب (Tabs)
+        TabRow(selectedTabIndex = selectedTabIndex) {
+            tabs.forEachIndexed { index, title ->
+                Tab(
+                    selected = selectedTabIndex == index,
+                    onClick = { selectedTabIndex = index },
+                    text = { Text(title) }
                 )
-            )
-        }
-    ) { paddingValues ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(16.dp)
-        ) {
-            if (transactions.isEmpty()) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("لا توجد عمليات مسجلة حالياً")
-                }
-            } else {
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(transactions) { tx ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 6.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-                        ) {
-                            Row(
-                                modifier = Modifier
-                                    .padding(16.dp)
-                                    .fillMaxWidth(),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "المبلغ: ${tx.amount} ج",
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold
-                                    )
-                                    Text(
-                                        text = "النوع: ${tx.transactionType}",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                    Text(
-                                        text = "تاريخ: ${tx.dateTime}",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = Color.Gray
-                                    )
-                                    Text(
-                                        text = "Hash: ${tx.messageHash.take(8)}...",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        color = Color.LightGray
-                                    )
-                                }
-
-                                // أيقونة توضح حالة المزامنة مع السيرفر
-                                Icon(
-                                    imageVector = if (tx.isSynced) Icons.Default.CloudOff else Icons.Default.CloudDone,
-                                    contentDescription = if (tx.isSynced) "تمت المزامنة" else "لم تتم المزامنة",
-                                    tint = if (tx.isSynced) Color(0xFF4CAF50) else Color(0xFFF44336),
-                                    modifier = Modifier.size(28.dp)
-                                )
-                            }
-                        }
-                    }
-                }
             }
+        }
+
+        // تصفية القائمة بناءً على الـ Tab
+        val filteredList = when (selectedTabIndex) {
+            0 -> transactions.filter { it.isSynced == 1 }
+            1 -> transactions.filter { it.isSynced == 0 }
+            else -> transactions
+        }
+
+        LazyColumn(modifier = Modifier.fillMaxSize()) {
+            items(filteredList) { tx ->
+                TransactionItem(tx)
+            }
+        }
+    }
+}
+
+@Composable
+fun TransactionItem(tx: Transaction) {
+    Card(
+        modifier = Modifier.padding(8.dp).fillMaxWidth(),
+        elevation = CardDefaults.cardElevation(4.dp)
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                Text(text = tx.transactionType, style = MaterialTheme.typography.titleMedium)
+                Text(text = "${tx.amount} EGP", color = Color.Green, style = MaterialTheme.typography.titleLarge)
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // إضافة رقم الشريحة هنا
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.SimCard, contentDescription = null, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(text = "SIM: ${tx.simNumber}", style = MaterialTheme.typography.bodySmall)
+                // ملحوظة: لو مش مخزن رقم الشريحة، ممكن نعرض الـ slotId
+            }
+
+            Text(text = tx.dateTime, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
         }
     }
 }
