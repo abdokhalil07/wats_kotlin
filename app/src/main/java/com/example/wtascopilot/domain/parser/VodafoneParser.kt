@@ -2,7 +2,6 @@ package com.example.wtascopilot.domain.parser
 
 import android.icu.text.SimpleDateFormat
 import com.example.wtascopilot.data.modle.Transaction
-import java.security.MessageDigest
 import java.util.Date
 import java.util.Locale
 
@@ -48,15 +47,8 @@ class VodafoneParser {
             msg,
             listOf(
                 """تم\s+استلام\s+(?:مبلغ\s+)?(\d+(?:\.\d+)?)""",
-                """إستلام مبلغ (\d+\.\d{2}) ج\.م""",
-                """تم\s+(?:تحويل|سحب|دفع)\s+(\d+(?:\.\d+)?)""",
-                """Received\s+EGP\s*(\d+(?:\.\d+)?)""",
-                """Amount\s*:\s*(\d+(?:\.\d+)?)""",
-                """(?:مبلغ|قيمة)\s+(\d+(?:\.\d+)?)""",
-                """EGP\s*(\d+(?:\.\d+)?)""",
-
-
-
+                """تم\s+(?:تحويل|سحب|دفع مبلغ)\s+(\d+(?:\.\d+)?)""",
+                """تم سحب\s(\d+(?:[.,]\d+)?)"""
                 )
         )?.toDouble() ?: 0.0
     }
@@ -65,11 +57,7 @@ class VodafoneParser {
         matchFirst(
             msg,
             listOf(
-                """مصاريف\s+(?:الخدمة)?\s*(\d+(?:\.\d+)?)""",
-                """رسوم\s*(\d+(?:\.\d+)?)""",
-                """رسوم التحويل\s*(\d+(?:\.\d+)?)""",
-                """رسوم التحويل \s*(\d+(?:\.\d+)?)""",
-                """Fees:\s*EGP\s*(\d+(?:\.\d+)?)"""
+                """مصاريف الخدمة\s(\d+(?:[.,]\d+)?)\sجنيه"""
             )
         )?.toDouble()
     /* ================= Phone ================= */
@@ -78,7 +66,6 @@ class VodafoneParser {
             msg,
             listOf(
                 """(?:من|إلى|الى|لرقم|ل|from|to)\s+(?:رقم\s+)?(01\d{9})""",
-                """(?:من|إلى|ل|from|to)\s+(?:رقم\s+)?(002\d{9})"""
             )
         )
     /* ================= Name ================= */
@@ -86,12 +73,10 @@ class VodafoneParser {
         return matchFirst(
             msg,
             listOf(
+                """المسجل بإسم\s+(.+?)\s+رصيدك الحالي""",
+                """تم دفع مبلغ \d+(?:\.\d+)?\s*جنيه\s*(.*?)\s* رصيد(?![\w\-])"""
 
-                """المسجل بإسم\s+([A-Za-z\u0600-\u06FF\s]+?)(?:[\.;]|\s+رصيد)""",
-                """المسجل باسم\s*(.*?)\s*بنجاح\.""",
-                """من\s+([^،]*)\s*،""",
-                // إنجليزي Instapay
-                """from\s+([A-Za-z\s]+)""",
+
             )
         )?.trim()
     }
@@ -100,10 +85,9 @@ class VodafoneParser {
         matchFirst(
             msg,
             listOf(
-                """رقم\s+العملية|المعاملة\s*(\d+)""",
                 """رقم العملية \s*(\d+)""",
-                """Ref:\s*(\d+)""",
-                """Transaction ID\s*(\d+)"""
+                """رقم العملية; \s*(\d+)"""
+
 
             )
         ) ?: "Unknown"
@@ -113,8 +97,11 @@ class VodafoneParser {
             msg,
             listOf(
                 """رصيد.*?(\d+(?:\.\d+)?)""",
-                """Balance.*?(\d+(?:\.\d+)?)""",
-                """Available Balance:\s*(\d+(?:\.\d+)?)"""
+                """رصيد محفظتك الحالي\s(\d+(?:[.,]\d+)?)""",
+                """رصيد محفظتك الحالى\s(\d+(?:[.,]\d+)?)""",
+                """رصيد حسابك الحالي\s(\d+(?:[.,]\d+)?)""",
+                """رصيد حسابك فى فودافون كاش الحالي\s(\d+(?:[.,]\d+)?)"""
+
             )
         )?.toDouble() ?: 0.0
     /* ================= Helper ================= */

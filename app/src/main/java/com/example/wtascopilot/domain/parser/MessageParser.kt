@@ -42,9 +42,9 @@ class MessageParser {
 
     private fun detectWallet(message: String): WalletType {
         return when {
-            message.contains("فودافون كاش", true) || message.contains("VF-Cash", true) || message.contains("لفودافون كاش", true) -> WalletType.VODAFONE_CASH
+            message.contains("فودافون", true) || message.contains("VF-Cash", true) || message.contains("لفودافون كاش", true) -> WalletType.VODAFONE_CASH
             message.contains("إي اندكاش", true) || message.contains("e&money", true) -> WalletType.ETISALAT_CASH
-            message.contains("اورنچ كاش", true) || message.contains("Orange Cash", true) -> WalletType.ORANGE_MONEY
+            message.contains("اورنچ", true) || message.contains("Orange Cash", true) -> WalletType.ORANGE_MONEY
             else -> WalletType.UNKNOWN
         }
     }

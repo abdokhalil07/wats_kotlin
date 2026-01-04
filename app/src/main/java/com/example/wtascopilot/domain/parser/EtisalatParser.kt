@@ -25,10 +25,10 @@ class EtisalatParser {
     }
     /* ================= Type ================= */
     private fun detectType(msg: String): String? = when {
-        Regex("""تم\s+استلام|إستلام|Received""", RegexOption.IGNORE_CASE).containsMatchIn(msg) ->
+        Regex("""تم\s+استلام|إستلام مبلغ |Received""", RegexOption.IGNORE_CASE).containsMatchIn(msg) ->
             "Receive"
 
-        Regex("""تم\s+تحويل|Transferred|has been transferred|sent|تحويل""",
+        Regex("""تم\s+تحويل""",
             RegexOption.IGNORE_CASE).containsMatchIn(msg) ->
             "Transfer"
 
@@ -47,16 +47,8 @@ class EtisalatParser {
         return matchFirst(
             msg,
             listOf(
-                """تم\s+استلام\s+(?:مبلغ\s+)?(\d+(?:\.\d+)?)""",
-                """إستلام مبلغ (\d+\.\d{2}) ج\.م""",
-                """تم\s+(?:تحويل|سحب|دفع)\s+(\d+(?:\.\d+)?)""",
-                """Received\s+EGP\s*(\d+(?:\.\d+)?)""",
-                """Amount\s*:\s*(\d+(?:\.\d+)?)""",
-                """(?:مبلغ|قيمة)\s+(\d+(?:\.\d+)?)""",
-                """EGP\s*(\d+(?:\.\d+)?)""",
-
-
-
+                """تم إستلام مبلغ\s(\d+(?:[.,]\d+)?)\sج.م""",
+                """تم تحويل مبلغ\s(\d+(?:[.,]\d+)?)\sج.م"""
                 )
         )?.toDouble() ?: 0.0
     }
@@ -65,11 +57,7 @@ class EtisalatParser {
         matchFirst(
             msg,
             listOf(
-                """مصاريف\s+(?:الخدمة)?\s*(\d+(?:\.\d+)?)""",
-                """رسوم\s*(\d+(?:\.\d+)?)""",
-                """رسوم التحويل\s*(\d+(?:\.\d+)?)""",
-                """رسوم التحويل \s*(\d+(?:\.\d+)?)""",
-                """Fees:\s*EGP\s*(\d+(?:\.\d+)?)"""
+                """رسوم التحويل\s(\d+(?:[.,]\d+)?)\s"""
             )
         )?.toDouble()
     /* ================= Phone ================= */
@@ -77,8 +65,8 @@ class EtisalatParser {
         matchFirst(
             msg,
             listOf(
-                """(?:من|إلى|الى|لرقم|ل|from|to)\s+(?:رقم\s+)?(01\d{9})""",
-                """(?:من|إلى|ل|from|to)\s+(?:رقم\s+)?(002\d{9})"""
+                """من رقم\s(\d+(?:[.,]\d+)?)\s""",
+                """الى رقم\s(\d+(?:[.,]\d+)?)\s"""
             )
         )
     /* ================= Name ================= */
@@ -86,12 +74,7 @@ class EtisalatParser {
         return matchFirst(
             msg,
             listOf(
-
-                """المسجل بإسم\s+([A-Za-z\u0600-\u06FF\s]+?)(?:[\.;]|\s+رصيد)""",
-                """المسجل باسم\s*(.*?)\s*بنجاح\.""",
-                """من\s+([^،]*)\s*،""",
-                // إنجليزي Instapay
-                """from\s+([A-Za-z\s]+)""",
+                """المسجل باسم\s*(.*?)\s*\s"""
             )
         )?.trim()
     }
@@ -100,11 +83,6 @@ class EtisalatParser {
         matchFirst(
             msg,
             listOf(
-                """رقم\s+العملية|المعاملة\s*(\d+)""",
-                """رقم العملية \s*(\d+)""",
-                """Ref:\s*(\d+)""",
-                """Transaction ID\s*(\d+)"""
-
             )
         ) ?: "Unknown"
     /* ================= Balance ================= */
@@ -112,9 +90,8 @@ class EtisalatParser {
         matchFirst(
             msg,
             listOf(
-                """رصيد.*?(\d+(?:\.\d+)?)""",
-                """Balance.*?(\d+(?:\.\d+)?)""",
-                """Available Balance:\s*(\d+(?:\.\d+)?)"""
+                """رصيد محفظتك الحالى\s(\d+(?:[.,]\d+)?)\sج.م""",
+                """رصيد محفظتك الحالى\s(\d+(?:[.,]\d+)?)"""
             )
         )?.toDouble() ?: 0.0
     /* ================= Helper ================= */

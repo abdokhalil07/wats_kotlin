@@ -25,10 +25,10 @@ class OrangeParser {
     }
     /* ================= Type ================= */
     private fun detectType(msg: String): String? = when {
-        Regex("""تم\s+استلام|إستلام|Received""", RegexOption.IGNORE_CASE).containsMatchIn(msg) ->
+        Regex("""تم إستلام عملية تحويل أموال""", RegexOption.IGNORE_CASE).containsMatchIn(msg) ->
             "Receive"
 
-        Regex("""تم\s+تحويل|Transferred|has been transferred|sent|تحويل""",
+        Regex("""عملية تحويل أموال ناجحة""",
             RegexOption.IGNORE_CASE).containsMatchIn(msg) ->
             "Transfer"
 
@@ -47,15 +47,8 @@ class OrangeParser {
         return matchFirst(
             msg,
             listOf(
-                """تم\s+استلام\s+(?:مبلغ\s+)?(\d+(?:\.\d+)?)""",
-                """إستلام مبلغ (\d+\.\d{2}) ج\.م""",
-                """تم\s+(?:تحويل|سحب|دفع)\s+(\d+(?:\.\d+)?)""",
-                """Received\s+EGP\s*(\d+(?:\.\d+)?)""",
-                """Amount\s*:\s*(\d+(?:\.\d+)?)""",
-                """(?:مبلغ|قيمة)\s+(\d+(?:\.\d+)?)""",
-                """EGP\s*(\d+(?:\.\d+)?)""",
-
-
+                """أموال بمبلغ\s(\d+(?:[.,]\d+)?)""",
+                """ناجحة بمبلغ\s(\d+(?:[.,]\d+)?)"""
 
                 )
         )?.toDouble() ?: 0.0
@@ -65,11 +58,8 @@ class OrangeParser {
         matchFirst(
             msg,
             listOf(
-                """مصاريف\s+(?:الخدمة)?\s*(\d+(?:\.\d+)?)""",
-                """رسوم\s*(\d+(?:\.\d+)?)""",
-                """رسوم التحويل\s*(\d+(?:\.\d+)?)""",
-                """رسوم التحويل \s*(\d+(?:\.\d+)?)""",
-                """Fees:\s*EGP\s*(\d+(?:\.\d+)?)"""
+                """رسوم التحويل\s(\d+(?:[.,]\d+)?)\sجنيه،""",
+
             )
         )?.toDouble()
     /* ================= Phone ================= */
@@ -77,8 +67,7 @@ class OrangeParser {
         matchFirst(
             msg,
             listOf(
-                """(?:من|إلى|الى|لرقم|ل|from|to)\s+(?:رقم\s+)?(01\d{9})""",
-                """(?:من|إلى|ل|from|to)\s+(?:رقم\s+)?(002\d{9})"""
+                """لرقم\s(\d+(?:[.,]\d+)?),"""
             )
         )
     /* ================= Name ================= */
@@ -86,12 +75,7 @@ class OrangeParser {
         return matchFirst(
             msg,
             listOf(
-
-                """المسجل بإسم\s+([A-Za-z\u0600-\u06FF\s]+?)(?:[\.;]|\s+رصيد)""",
-                """المسجل باسم\s*(.*?)\s*بنجاح\.""",
-                """من\s+([^،]*)\s*،""",
-                // إنجليزي Instapay
-                """from\s+([A-Za-z\s]+)""",
+                """\s*من\s*(.*?)\s*،"""
             )
         )?.trim()
     }
@@ -100,11 +84,8 @@ class OrangeParser {
         matchFirst(
             msg,
             listOf(
-                """رقم\s+العملية|المعاملة\s*(\d+)""",
-                """رقم العملية \s*(\d+)""",
-                """Ref:\s*(\d+)""",
-                """Transaction ID\s*(\d+)"""
-
+                """رقم المعاملة\s*(\d+)""",
+                """رقم العملية\s*(\d+)"""
             )
         ) ?: "Unknown"
     /* ================= Balance ================= */
@@ -112,9 +93,8 @@ class OrangeParser {
         matchFirst(
             msg,
             listOf(
-                """رصيد.*?(\d+(?:\.\d+)?)""",
-                """Balance.*?(\d+(?:\.\d+)?)""",
-                """Available Balance:\s*(\d+(?:\.\d+)?)"""
+                """رصيدك الحالي\s*\d+(?:[.,]\d+)?\s*جنية\.""",
+                """رصيدك الحالي\s(\d+(?:[.,]\d+)?)\s*جنيه\s."""
             )
         )?.toDouble() ?: 0.0
     /* ================= Helper ================= */
