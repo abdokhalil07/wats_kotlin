@@ -1,10 +1,14 @@
 package com.example.wtascopilot
 
+import android.Manifest
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -19,6 +23,8 @@ import com.example.wtascopilot.ui.login.LoginScreen
 import com.example.wtascopilot.data.repository.LoginRepository
 // هذا السطر مهم جداً لاستدعاء الدالة التي أنشأتها في الملف المنفصل
 import com.example.wtascopilot.MainNavigation
+import com.example.wtascopilot.foreground.SmsMonitorService
+
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -61,7 +67,10 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.POST_NOTIFICATIONS), 101)
+        }
+        startSmsService()
         checkAndRequestPermissions()
         requestIgnoreBatteryOptimizations()
 }
@@ -81,6 +90,15 @@ class MainActivity : ComponentActivity() {
                 permissionsToRequest.toTypedArray(),
                 100 // Request Code
             )
+        }
+    }
+
+    fun startSmsService() {
+        val intent = Intent(this, SmsMonitorService::class.java)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            startForegroundService(intent)
+        } else {
+            startService(intent)
         }
     }
 
