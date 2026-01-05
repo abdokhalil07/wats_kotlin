@@ -1,105 +1,53 @@
 package com.example.wtascopilot.sms.receiver
 
+
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.provider.Telephony
 import android.util.Log
-import com.example.wtascopilot.data.local.SimStorage
-import com.example.wtascopilot.data.modle.SmsTransaction
-import com.example.wtascopilot.data.repository.TransactionRepositoryImpl
-import com.example.wtascopilot.domain.parser.MessageParser
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
+import com.example.wtascopilot.foreground.SmsMonitorService
 
 class SmsReceiver : BroadcastReceiver() {
 
-    private val parser = MessageParser()
-
     override fun onReceive(context: Context, intent: Intent) {
 
+        if (intent.action != Telephony.Sms.Intents.SMS_RECEIVED_ACTION) return
 
-        if (intent.action == Telephony.Sms.Intents.SMS_RECEIVED_ACTION) {
-            val pendingResult = goAsync()
-            val bundle = intent.extras
-            val incomingSubId = bundle?.getInt("subscription", -1) ?: -1
-            val savedSubId = SimStorage.getSavedSubId(context)
+        val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
+        if (messages.isNullOrEmpty()) return
 
-            CoroutineScope(Dispatchers.IO).launch {
-                try {
-                    if (incomingSubId != -1 && incomingSubId == savedSubId) {
+        // ✅ الطريقة الصحيحة لجلب subscriptionId
+        val subId = intent.extras?.getInt(
+            "android.telephony.extra.SUBSCRIPTION_INDEX",
+            -1
+        ) ?: -1
 
-                        val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
-                        val sender = messages[0].displayOriginatingAddress
-                        val fullMessageBody = StringBuilder()
+        val sender = messages[0].displayOriginatingAddress ?: "Unknown"
 
-                        for (sms in messages) {
-                            fullMessageBody.append(sms.displayMessageBody)
-                        }
-
-                        val finalBody = fullMessageBody.toString()
-
-                        if (isVodafoneCashMessage(sender, finalBody)) {
-                            handleIncomingMessage(context.applicationContext, sender, finalBody, incomingSubId)
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e("SmsReceiver", "Error receiving SMS: ${e.message}")
-                    e.printStackTrace()
-                } finally {
-                    pendingResult.finish()
-                }
+        val body = buildString {
+            for (sms in messages) {
+                append(sms.messageBody)
             }
         }
-    }
 
-    private fun isVodafoneCashMessage(sender: String?, body: String): Boolean {
-        if (sender == null) return false
-        val s = sender.lowercase()
-        return s.contains("vf-cash") ||
-                s.contains("e& money") ||
-                s.contains("etisalat") ||
-                s.contains("orange") ||
-                body.contains("Orange Cash", ignoreCase = true)
-    }
+        Log.d("SmsReceiver", "SMS from=$sender subId=$subId")
 
-    private suspend fun handleIncomingMessage(context: Context, sender: String?, message: String, subid: Int) {
-        val transaction = parser.parseMessage(sender, message, subid)
-        val repo = TransactionRepositoryImpl(context)
-        RawSmsMessage(sender, message,repo)
-        if (transaction != null) {
-            val isDuplicate = repo.isTransactionExist(transaction.messageHash)
-            if (!isDuplicate) {
-                Log.d("SmsReceiver", "New transaction found: ${transaction.transactionId}")
-                repo.saveLocal(transaction) // 1. الحفظ المبدئي (تظهر في الـ UI كغير متزامنة)
+        val serviceIntent = Intent(context, SmsMonitorService::class.java).apply {
+            action = SmsMonitorService.ACTION_PUSH_SMS
+            putExtra("sender", sender)
+            putExtra("body", body)
+            putExtra("slot", subId)
+        }
 
-                // --- التعديل الجوهري هنا ---
-                // نستقبل نتيجة الإرسال (true/false)
-                val isSentSuccess = repo.sendToServer(transaction)
-
-                if (isSentSuccess) {
-                    // إذا تم الإرسال بنجاح، نحدث الحالة فوراً في الداتا بيز
-                    // هذا يمنع الـ SyncWorker من إرسالها مرة أخرى
-                    repo.markAsSynced(transaction.messageHash)
-                    Log.d("SmsReceiver", "Sent immediately and marked as Synced.")
-                } else {
-                    Log.d("SmsReceiver", "Send failed, SyncWorker will retry later.")
-                }
-                // ---------------------------
-
+        try {
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                context.startForegroundService(serviceIntent)
             } else {
-                Log.d("SmsReceiver", "Duplicate transaction ignored: ${transaction.transactionId}")
+                context.startService(serviceIntent)
             }
-        } else {
-            Log.d("SmsReceiver", "Message received but could not be parsed.")
+        } catch (e: Exception) {
+            Log.e("SmsReceiver", "فشل تشغيل الخدمة", e)
         }
-    }
-
-    private suspend fun RawSmsMessage(sender: String?, message: String,repo: TransactionRepositoryImpl){
-        val rawSms = SmsTransaction(0,sender = sender, body = message, 0)
-        repo.insertSms(rawSms)
-        Log.d("SmsReceiver", "New transaction found: ${rawSms.body}")
-
     }
 }

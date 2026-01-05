@@ -19,7 +19,7 @@ object WorkScheduler {
 
         WorkManager.getInstance(context).enqueueUniqueWork(
             "sync_work_unique",
-            ExistingWorkPolicy.KEEP,
+            ExistingWorkPolicy.REPLACE,
             work
         )
     }
