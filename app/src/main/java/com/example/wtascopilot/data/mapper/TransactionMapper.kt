@@ -1,7 +1,9 @@
 package com.example.wtascopilot.data.mapper
 
 
+import com.example.wtascopilot.data.local.entity.RawSmsEntity
 import com.example.wtascopilot.data.local.entity.TransactionEntity
+import com.example.wtascopilot.data.modle.SmsTransaction
 import com.example.wtascopilot.data.modle.Transaction
 import com.example.wtascopilot.data.remote.model.TransactionRequest
 
@@ -51,3 +53,23 @@ fun Transaction.toRequest(simNumber: String?): TransactionRequest {
         simNumber = simNumber
     )
 }
+
+fun SmsTransaction.toEntity(): RawSmsEntity {
+    return RawSmsEntity(
+        sender = sender,
+        body = body,
+        timestamp = timestamp
+    )
+}
+
+fun RawSmsEntity.toModel(): SmsTransaction {
+    return SmsTransaction(
+        id = this.id,
+        sender = this.sender,
+        body = this.body,
+        timestamp = this.timestamp
+    )
+}
+
+
+

@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import com.example.wtascopilot.data.local.entity.RawSmsEntity
 import com.example.wtascopilot.data.local.entity.TransactionEntity
 import kotlinx.coroutines.flow.Flow
 
@@ -29,5 +30,11 @@ interface TransactionDao {
 
     @Query("UPDATE transactions SET isSynced = CASE WHEN isSynced = 1 THEN 0 ELSE 1 END WHERE messageHash = :hash")
     suspend fun toggleSyncStatus(hash: String)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertSms(transaction: RawSmsEntity)
+
+    @Query("SELECT * FROM raw_sms ORDER BY timestamp DESC")
+    fun getAllSms(): Flow<List<RawSmsEntity>>
 
 }

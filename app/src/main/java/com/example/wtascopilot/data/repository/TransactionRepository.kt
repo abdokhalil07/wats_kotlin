@@ -1,10 +1,13 @@
 package com.example.wtascopilot.data.repository
 
+import com.example.wtascopilot.data.modle.SmsTransaction
 import com.example.wtascopilot.data.modle.Transaction
 import kotlinx.coroutines.flow.Flow
 
 interface TransactionRepository {
     suspend fun saveLocal(transaction: Transaction)
+
+    suspend fun insertSms(smsTransaction: SmsTransaction)
 
     suspend fun sendToServer(transaction: Transaction): Boolean
 
@@ -17,5 +20,9 @@ interface TransactionRepository {
     suspend fun toggleSyncStatus(hash: String)
 
     suspend fun isTransactionExist(transactionId: String): Boolean
+
+    fun getAllLocalSms(): Flow<List<SmsTransaction>>
+
+
 
 }

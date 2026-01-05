@@ -7,6 +7,7 @@ import com.example.wtascopilot.data.local.SimStorage
 import com.example.wtascopilot.data.mapper.toEntity
 import com.example.wtascopilot.data.mapper.toModel
 import com.example.wtascopilot.data.mapper.toRequest
+import com.example.wtascopilot.data.modle.SmsTransaction
 import com.example.wtascopilot.data.modle.Transaction
 import com.example.wtascopilot.data.remote.RetrofitClient
 import kotlinx.coroutines.flow.Flow
@@ -67,5 +68,18 @@ class TransactionRepositoryImpl(private val context: Context) : TransactionRepos
         dao.toggleSyncStatus(hash)
     }
 
+    override suspend fun insertSms(smsTransaction: SmsTransaction) {
+        // نستخدم الـ messageHash لمنع التكرار
+
+            dao.insertSms(smsTransaction.toEntity())
+            Log.d("Repo", "تم حفظ الرساله ")
+
+    }
+
+    override fun getAllLocalSms(): Flow<List<SmsTransaction>> {
+        return dao.getAllSms().map { entities ->
+            entities.map { it.toModel() }
+        }
+    }
 
 }

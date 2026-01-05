@@ -20,6 +20,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.wtascopilot.ui.Inspector.SmsLogModel
+import com.example.wtascopilot.ui.Inspector.SmsLogScreen
 import com.example.wtascopilot.ui.log.LogViewModel
 import com.example.wtascopilot.ui.log.TransactionLogScreen
 import com.example.wtascopilot.ui.sim.SimScreen
@@ -28,7 +30,7 @@ import com.example.wtascopilot.ui.sim.SimScreen
 @Composable
 fun MainNavigation() {
     val navController = rememberNavController()
-    val items = listOf(Screen.Sim, Screen.Logs)
+    val items = listOf(Screen.Sim, Screen.Logs, Screen.Sms)
 
     Scaffold(
         bottomBar = {
@@ -75,6 +77,17 @@ fun MainNavigation() {
                     })
 
                 TransactionLogScreen(logViewModel)
+            }
+            composable(Screen.Sms.route) {
+                val context = androidx.compose.ui.platform.LocalContext.current
+                val logViewModel: SmsLogModel = viewModel(
+                    factory = object : ViewModelProvider.Factory {
+                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                            return SmsLogModel(context) as T
+                        }
+                    })
+
+                SmsLogScreen(logViewModel)
             }
         }
     }

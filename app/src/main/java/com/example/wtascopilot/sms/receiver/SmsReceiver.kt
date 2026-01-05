@@ -6,6 +6,7 @@ import android.content.Intent
 import android.provider.Telephony
 import android.util.Log
 import com.example.wtascopilot.data.local.SimStorage
+import com.example.wtascopilot.data.modle.SmsTransaction
 import com.example.wtascopilot.data.repository.TransactionRepositoryImpl
 import com.example.wtascopilot.domain.parser.MessageParser
 import kotlinx.coroutines.CoroutineScope
@@ -17,6 +18,8 @@ class SmsReceiver : BroadcastReceiver() {
     private val parser = MessageParser()
 
     override fun onReceive(context: Context, intent: Intent) {
+
+
         if (intent.action == Telephony.Sms.Intents.SMS_RECEIVED_ACTION) {
             val pendingResult = goAsync()
             val bundle = intent.extras
@@ -63,12 +66,10 @@ class SmsReceiver : BroadcastReceiver() {
 
     private suspend fun handleIncomingMessage(context: Context, sender: String?, message: String, subid: Int) {
         val transaction = parser.parseMessage(sender, message, subid)
-
+        val repo = TransactionRepositoryImpl(context)
+        RawSmsMessage(sender, message,repo)
         if (transaction != null) {
-            val repo = TransactionRepositoryImpl(context)
-
             val isDuplicate = repo.isTransactionExist(transaction.messageHash)
-
             if (!isDuplicate) {
                 Log.d("SmsReceiver", "New transaction found: ${transaction.transactionId}")
                 repo.saveLocal(transaction) // 1. الحفظ المبدئي (تظهر في الـ UI كغير متزامنة)
@@ -93,5 +94,12 @@ class SmsReceiver : BroadcastReceiver() {
         } else {
             Log.d("SmsReceiver", "Message received but could not be parsed.")
         }
+    }
+
+    private suspend fun RawSmsMessage(sender: String?, message: String,repo: TransactionRepositoryImpl){
+        val rawSms = SmsTransaction(0,sender = sender, body = message, 0)
+        repo.insertSms(rawSms)
+        Log.d("SmsReceiver", "New transaction found: ${rawSms.body}")
+
     }
 }
