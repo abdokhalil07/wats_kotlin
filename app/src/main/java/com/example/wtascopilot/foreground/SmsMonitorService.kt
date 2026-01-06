@@ -92,7 +92,7 @@ class SmsMonitorService : Service() {
             // 3. محاولة الـ Parsing
             val transaction = parser.parseMessage(sms.sender, sms.body, sms.slotId)
             if (transaction != null) {
-                val finalTx = transaction.copy(simNumber = simNumber)
+                val finalTx = transaction.copy(simNumber = simNumber, subId = sms.slotId)
                 repository.saveLocal(finalTx)
                 WorkScheduler.scheduleSync(applicationContext)
             }

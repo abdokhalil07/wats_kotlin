@@ -6,7 +6,7 @@ import java.util.Date
 import java.util.Locale
 
 class EtisalatParser {
-    fun parseEtisalat(message: String): Transaction? {
+    fun parseEtisalat(message: String, subId: Int): Transaction? {
         val type = detectType(message) ?: return null
 
         return Transaction(
@@ -20,6 +20,7 @@ class EtisalatParser {
             senderName = extractSenderName(message),
             transactionId = extractTransactionId(message),
             balance = extractBalance(message),
+            subId = subId,
             simNumber = null
         )
     }

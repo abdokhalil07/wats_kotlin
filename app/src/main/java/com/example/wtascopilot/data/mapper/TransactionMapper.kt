@@ -19,6 +19,7 @@ fun Transaction.toEntity(): TransactionEntity {
         transactionId = this.transactionId,
         dateTime = this.dateTime,
         balance = this.balance,
+        subId = this.subId,
         isSynced = this.isSynced
     )
 }
@@ -36,6 +37,7 @@ fun TransactionEntity.toModel(): Transaction {
         dateTime = this.dateTime,
         balance = this.balance,
         isSynced = this.isSynced,
+        subId = this.subId,
         messageHash = this.messageHash
     )
 }

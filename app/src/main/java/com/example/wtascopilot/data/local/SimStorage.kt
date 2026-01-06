@@ -32,7 +32,7 @@ object SimStorage {
         context.getSharedPreferences(PREF, Context.MODE_PRIVATE).edit().clear().apply()
     }
 
-    fun getPhoneNumberForSub(context: Context, incomingSubId: Int): String? {
+    fun getPhoneNumberForSub(context: Context, incomingSubId: Int?): String? {
         val prefs = context.getSharedPreferences(PREF, Context.MODE_PRIVATE)
         return prefs.getString("number_$incomingSubId", null)
     }

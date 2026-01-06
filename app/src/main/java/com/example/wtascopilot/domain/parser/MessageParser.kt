@@ -18,14 +18,14 @@ class MessageParser {
 
         // التوجيه بناءً على اسم المرسل (الأولوية الأولى)
         val transaction = when {
-            s.contains("vf-cash") -> vodafoneParser.parseVodafone(message)
-            s.contains("e& money") -> etisalatParser.parseEtisalat(message)
-            s.contains("orange cash") -> orangeParser.parseOrange(message)
+            s.contains("vf-cash") -> vodafoneParser.parseVodafone(message, subId)
+            s.contains("e& money") -> etisalatParser.parseEtisalat(message, subId)
+            s.contains("orangecash") -> orangeParser.parseOrange(message, subId)
             else -> {
                 when (detectWallet(message)) {
-                    WalletType.VODAFONE_CASH -> vodafoneParser.parseVodafone(message)
-                    WalletType.ETISALAT_CASH -> etisalatParser.parseEtisalat(message)
-                    WalletType.ORANGE_MONEY -> orangeParser.parseOrange(message)
+                    WalletType.VODAFONE_CASH -> vodafoneParser.parseVodafone(message, subId)
+                    WalletType.ETISALAT_CASH -> etisalatParser.parseEtisalat(message, subId)
+                    WalletType.ORANGE_MONEY -> orangeParser.parseOrange(message, subId)
                     else -> null
                 }
             }
@@ -44,7 +44,7 @@ class MessageParser {
         return when {
             message.contains("فودافون", true) || message.contains("VF-Cash", true) || message.contains("لفودافون كاش", true) -> WalletType.VODAFONE_CASH
             message.contains("إي اندكاش", true) || message.contains("e&money", true) -> WalletType.ETISALAT_CASH
-            message.contains("اورنچ", true) || message.contains("Orange Cash", true) -> WalletType.ORANGE_MONEY
+            message.contains("اورنچ", true) || message.contains("orange", true) -> WalletType.ORANGE_MONEY
             else -> WalletType.UNKNOWN
         }
     }

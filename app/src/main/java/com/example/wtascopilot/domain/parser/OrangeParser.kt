@@ -7,7 +7,7 @@ import java.util.Locale
 
 
 class OrangeParser {
-    fun parseOrange(message: String): Transaction? {
+    fun parseOrange(message: String, subId: Int): Transaction? {
         val type = detectType(message) ?: return null
         return Transaction(
             id = 0,
@@ -20,6 +20,7 @@ class OrangeParser {
             senderName = extractSenderName(message),
             transactionId = extractTransactionId(message),
             balance = extractBalance(message),
+            subId = subId,
             simNumber = null
         )
     }

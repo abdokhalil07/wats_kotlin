@@ -6,7 +6,7 @@ import java.util.Date
 import java.util.Locale
 
 class VodafoneParser {
-    fun parseVodafone(message: String): Transaction? {
+    fun parseVodafone(message: String, subId: Int): Transaction? {
         val type = detectType(message) ?: return null
         return Transaction(
             id = 0,
@@ -19,7 +19,8 @@ class VodafoneParser {
             senderName = extractSenderName(message),
             transactionId = extractTransactionId(message),
             balance = extractBalance(message),
-            simNumber = null
+            simNumber = null,
+            subId = subId,
         )
     }
     /* ================= Type ================= */

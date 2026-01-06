@@ -40,7 +40,7 @@ class TransactionRepositoryImpl(private val context: Context) : TransactionRepos
 
     override suspend fun sendToServer(transaction: Transaction): Boolean {
         return try {
-            val simNumber = SimStorage.getSavedPhoneNumber(context) ?: "Unknown"
+            val simNumber = SimStorage.getPhoneNumberForSub(context, transaction.subId) ?: "Unknown"
             val request = transaction.toRequest(simNumber)
             val response = RetrofitClient.api.sendTransaction(request)
 
