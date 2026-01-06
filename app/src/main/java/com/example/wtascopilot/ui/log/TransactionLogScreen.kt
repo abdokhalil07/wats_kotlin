@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudDone
+import androidx.compose.material.icons.filled.CloudUpload
 
 import androidx.compose.material.icons.filled.SimCard
 import androidx.compose.material3.*
@@ -52,14 +54,19 @@ fun TransactionLogScreen(viewModel: LogViewModel = viewModel()) {
 
         LazyColumn(modifier = Modifier.fillMaxSize()) {
             items(filteredList) { tx ->
-                TransactionItem(tx)
+                TransactionItem(
+                    tx,
+                    onSyncClick = { hash ->
+                        viewModel.toggleSync(hash)
+                    }
+                )
             }
         }
     }
 }
 
 @Composable
-fun TransactionItem(tx: Transaction) {
+fun TransactionItem(tx: Transaction, onSyncClick: (String) -> Unit) {
     Card(
         modifier = Modifier.padding(8.dp).fillMaxWidth(),
         elevation = CardDefaults.cardElevation(4.dp)
@@ -68,6 +75,13 @@ fun TransactionItem(tx: Transaction) {
             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
                 Text(text = tx.transactionType, style = MaterialTheme.typography.titleMedium)
                 Text(text = "${tx.amount} EGP", color = Color.Green, style = MaterialTheme.typography.titleLarge)
+                IconButton(onClick = { onSyncClick(tx.messageHash) }) {
+                    Icon(
+                        imageVector = if (tx.isSynced == 1) Icons.Default.CloudDone else Icons.Default.CloudUpload,
+                        contentDescription = null,
+                        tint = if (tx.isSynced == 1) Color(0xFF4CAF50) else Color.Gray
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -81,6 +95,7 @@ fun TransactionItem(tx: Transaction) {
             }
 
             Text(text = tx.dateTime, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+
         }
     }
 }
