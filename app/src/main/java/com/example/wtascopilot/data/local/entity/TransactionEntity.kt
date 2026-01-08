@@ -18,5 +18,6 @@ data class TransactionEntity(
     val dateTime: String,
     val balance: Double,
     val subId: Int,
+    val body: String,
     val isSynced: Int = 0
 )

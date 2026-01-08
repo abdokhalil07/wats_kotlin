@@ -1,4 +1,4 @@
-package com.example.wtascopilot
+package com.example.wtascopilot.navigation
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -10,6 +10,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 
 import androidx.lifecycle.ViewModelProvider
@@ -68,7 +69,7 @@ fun MainNavigation() {
                 SimScreen() // شاشة الشرائح اللي عندك
             }
             composable(Screen.Logs.route) {
-                val context = androidx.compose.ui.platform.LocalContext.current
+                val context = LocalContext.current
                 val logViewModel: LogViewModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
                         override fun <T : ViewModel> create(modelClass: Class<T>): T {
@@ -79,7 +80,7 @@ fun MainNavigation() {
                 TransactionLogScreen(logViewModel)
             }
             composable(Screen.Sms.route) {
-                val context = androidx.compose.ui.platform.LocalContext.current
+                val context = LocalContext.current
                 val logViewModel: SmsLogModel = viewModel(
                     factory = object : ViewModelProvider.Factory {
                         override fun <T : ViewModel> create(modelClass: Class<T>): T {

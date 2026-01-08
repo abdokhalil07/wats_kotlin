@@ -20,6 +20,7 @@ class VodafoneParser {
             transactionId = extractTransactionId(message),
             balance = extractBalance(message),
             simNumber = null,
+            body = message,
             subId = subId,
         )
     }

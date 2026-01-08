@@ -68,7 +68,9 @@ fun SimScreen(
     }
 
     Scaffold { padding ->
+
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
+
             Text(
                 text = "إدارة الشرائح",
                 style = MaterialTheme.typography.headlineMedium,
@@ -77,6 +79,20 @@ fun SimScreen(
 
             if (uiState.isLoading) {
                 CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+            }
+
+            uiState.error?.let { msg ->
+                Card(
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFFFFEBEE)),
+                    modifier = Modifier.padding(16.dp).fillMaxWidth()
+                ) {
+                    Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(text = "⚠️ $msg", color = Color.Red)
+                        TextButton(onClick = { viewModel.loadSimCards(context) }) {
+                            Text("إعادة المحاولة")
+                        }
+                    }
+                }
             }
 
             LazyColumn(

@@ -21,6 +21,7 @@ class EtisalatParser {
             transactionId = extractTransactionId(message),
             balance = extractBalance(message),
             subId = subId,
+            body = message,
             simNumber = null
         )
     }

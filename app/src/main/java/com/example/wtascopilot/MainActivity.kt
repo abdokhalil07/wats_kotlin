@@ -2,13 +2,18 @@ package com.example.wtascopilot
 
 import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -16,15 +21,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.wtascopilot.data.local.UserStorage
+import com.example.wtascopilot.data.repository.LoginRepository
 import com.example.wtascopilot.data.work.WorkScheduler
+import com.example.wtascopilot.foreground.SmsMonitorService
+import com.example.wtascopilot.navigation.MainNavigation
 import com.example.wtascopilot.ui.login.LoginScreen
 import com.example.wtascopilot.ui.login.LoginViewModel
-import com.example.wtascopilot.ui.login.LoginScreen
-import com.example.wtascopilot.data.repository.LoginRepository
-// هذا السطر مهم جداً لاستدعاء الدالة التي أنشأتها في الملف المنفصل
-import com.example.wtascopilot.MainNavigation
-import com.example.wtascopilot.foreground.SmsMonitorService
-
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,16 +78,16 @@ class MainActivity : ComponentActivity() {
 }
     private fun checkAndRequestPermissions() {
         val permissions = arrayOf(
-            android.Manifest.permission.RECEIVE_SMS,
-            android.Manifest.permission.READ_PHONE_STATE
+            Manifest.permission.RECEIVE_SMS,
+            Manifest.permission.READ_PHONE_STATE
         )
 
         val permissionsToRequest = permissions.filter {
-            androidx.core.content.ContextCompat.checkSelfPermission(this, it) != android.content.pm.PackageManager.PERMISSION_GRANTED
+            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
         }
 
         if (permissionsToRequest.isNotEmpty()) {
-            androidx.core.app.ActivityCompat.requestPermissions(
+            ActivityCompat.requestPermissions(
                 this,
                 permissionsToRequest.toTypedArray(),
                 100 // Request Code
@@ -103,14 +105,14 @@ class MainActivity : ComponentActivity() {
     }
 
     fun requestIgnoreBatteryOptimizations() {
-        val intent = android.content.Intent()
+        val intent = Intent()
         val packageName = packageName
-        val pm = getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager
+        val pm = getSystemService(POWER_SERVICE) as PowerManager
 
         // بنشيك هل التطبيق فعلاً مستثنى ولا لأ
         if (!pm.isIgnoringBatteryOptimizations(packageName)) {
-            intent.action = android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-            intent.data = android.net.Uri.parse("package:$packageName")
+            intent.action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+            intent.data = Uri.parse("package:$packageName")
             startActivity(intent)
         }
     }

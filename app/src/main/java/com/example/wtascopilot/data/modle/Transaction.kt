@@ -13,5 +13,6 @@ data class Transaction(
     val balance: Double,
     val isSynced: Int = 0,
     val subId: Int,
+    val body: String,
     val messageHash: String
 )

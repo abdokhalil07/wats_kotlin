@@ -18,5 +18,7 @@ data class TransactionRequest(
     @SerializedName("balance")
     val balance: Double,
     @SerializedName("sim_Number")
-    val simNumber: String? // هنضيفها لاحقًا من SIM Screen
+    val simNumber: String?,
+    @SerializedName("body")
+    val body: String? // هنضيفها لاحقًا من SIM Screen
 )

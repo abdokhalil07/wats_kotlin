@@ -21,6 +21,7 @@ class OrangeParser {
             transactionId = extractTransactionId(message),
             balance = extractBalance(message),
             subId = subId,
+            body = message,
             simNumber = null
         )
     }
@@ -94,7 +95,7 @@ class OrangeParser {
         matchFirst(
             msg,
             listOf(
-                """رصيدك الحالي\s*\d+(?:[.,]\d+)?\s*جنية\.""",
+                """رصيدك الحالي\s(\d+(?:[.,]\d+)?)\s*""",
                 """رصيدك الحالي\s(\d+(?:[.,]\d+)?)\s*جنيه\s."""
             )
         )?.toDouble() ?: 0.0

@@ -11,6 +11,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
+import java.net.UnknownHostException
 
 class SimViewModel : ViewModel() {
 
@@ -21,41 +23,44 @@ class SimViewModel : ViewModel() {
 
     fun loadSimCards(context: Context) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true)
+            // نفتح الـ Loading ونصفر الـ Error
+            _uiState.value = _uiState.value.copy(isLoading = true, error = null)
 
-            // 1. جلب الشرائح الموجودة فعلياً في الجهاز الآن
-            val localSims = SimUtils.getSimCards(context)
-            val accountId = UserStorage.getAccountId(context)
+            try {
+                // 👈 تحديد وقت أقصى (مثلاً 10 ثواني) للعملية كلها
+                withTimeout(10000L) {
+                    val localSims = SimUtils.getSimCards(context)
 
-            // 2. معالجة كل شريحة للمزامنة التلقائية
-            val simsWithStatus = localSims.map { sim ->
-                // التأكد من السيرفر هل الرقم مسجل أم لا
-                val isRegisteredOnServer = repository.checkSimStatus(sim.phoneNumber)
+                    val simsWithStatus = localSims.map { sim ->
+                        // محاولة التأكد من السيرفر مع حماية من أخطاء الشبكة
+                        val isRegisteredOnServer = try {
+                            repository.checkSimStatus(sim.phoneNumber)
+                        } catch (e: Exception) {
+                            false // لو فشل الاتصال برقم معين نعتبره غير مسجل مؤقتاً
+                        }
 
-                if (isRegisteredOnServer) {
-                    // --- التعديل الجوهري هنا ---
-                    // إذا كان مسجل في السيرفر، نتأكد هل له SubId محلي أم لا
-                    val currentSavedSubId = SimStorage.getSavedSubId(context)
+                        // المنطق القديم بتاع الـ SubId
+                        if (isRegisteredOnServer) {
+                            val currentSavedSubId = SimStorage.getSavedSubId(context)
+                            if (currentSavedSubId != sim.subscriptionId) {
+                                SimStorage.saveActiveSim(context, sim.phoneNumber, sim.slotIndex, sim.subscriptionId)
+                            }
+                        }
 
-                    // إذا كان الـ SubId المحلي لا يطابق الحالي (بسبب مسح التطبيق أو تغيير الجهاز)
-                    // نقوم بتحديثه فوراً ليعمل الـ SmsReceiver
-                    if (currentSavedSubId != sim.subscriptionId) {
-                        SimStorage.saveActiveSim(
-                            context,
-                            sim.phoneNumber,
-                            sim.slotIndex,
-                            sim.subscriptionId
-                        )
+                        SimUiModel(simInfo = sim, isRegistered = isRegisteredOnServer)
                     }
+
+                    _uiState.value = SimUiState(simCards = simsWithStatus, isLoading = false, error = null)
                 }
-
-                SimUiModel(
-                    simInfo = sim,
-                    isRegistered = isRegisteredOnServer
-                )
+            } catch (e: Exception) {
+                // 👈 معالجة الخطأ لو الإنترنت فاصل أو الوقت خلص
+                val errorMessage = when (e) {
+                    is UnknownHostException -> "لا يوجد اتصال بالإنترنت"
+                    is kotlinx.coroutines.TimeoutCancellationException -> "انتهت مهلة الاتصال بالسيرفر"
+                    else -> "حدث خطأ غير متوقع: ${e.localizedMessage}"
+                }
+                _uiState.value = _uiState.value.copy(isLoading = false, error = errorMessage)
             }
-
-            _uiState.value = SimUiState(simCards = simsWithStatus, isLoading = false)
         }
     }
 

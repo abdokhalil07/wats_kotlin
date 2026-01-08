@@ -20,6 +20,7 @@ fun Transaction.toEntity(): TransactionEntity {
         dateTime = this.dateTime,
         balance = this.balance,
         subId = this.subId,
+        body = this.body,
         isSynced = this.isSynced
     )
 }
@@ -38,6 +39,7 @@ fun TransactionEntity.toModel(): Transaction {
         balance = this.balance,
         isSynced = this.isSynced,
         subId = this.subId,
+        body = this.body,
         messageHash = this.messageHash
     )
 }
@@ -52,6 +54,7 @@ fun Transaction.toRequest(simNumber: String?): TransactionRequest {
         transactionId = transactionId,
         dateTime = dateTime,
         balance = balance,
+        body = this.body,
         simNumber = simNumber
     )
 }

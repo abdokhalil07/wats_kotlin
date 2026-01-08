@@ -1,4 +1,4 @@
-package com.example.wtascopilot
+package com.example.wtascopilot.navigation
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.Icons
