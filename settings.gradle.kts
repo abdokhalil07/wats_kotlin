@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "WTASCopilot"
+rootProject.name = "WTAS Config"
 include(":app")
  

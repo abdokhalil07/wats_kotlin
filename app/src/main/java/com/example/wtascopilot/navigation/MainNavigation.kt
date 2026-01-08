@@ -31,7 +31,7 @@ import com.example.wtascopilot.ui.sim.SimScreen
 @Composable
 fun MainNavigation() {
     val navController = rememberNavController()
-    val items = listOf(Screen.Sim, Screen.Logs, Screen.Sms)
+    val items = listOf(Screen.Sim, Screen.Logs)
 
     Scaffold(
         bottomBar = {
